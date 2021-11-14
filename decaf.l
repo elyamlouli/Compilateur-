@@ -25,6 +25,7 @@ id {alpha}{alpha_num}*
 %%
 {comment} { return COMMENT; }
 
+ /* Mots réservés */
 "boolean" { return BOOLEAN; }
 "break" { return BREAK; }
 "class" {return CLASS;}
@@ -36,9 +37,12 @@ id {alpha}{alpha_num}*
 "return" { return RETURN; }
 "void" { return VOID; }
 
+ /* Fin des mots réservés */
 "Program" {return PROGRAM;}
 
 "+"|"-"|"*"|"/"|"%" { return yytext[0]; }
+
+";" { return yytext[0]; }
 
 "{"|"}" { return yytext[0]; }
 "["|"]" { return yytext[0]; }
@@ -62,8 +66,6 @@ id {alpha}{alpha_num}*
 {string_literal} {return STRING_LIT;}
 {char_literal} {return CHAR_LIT;}
 {bool_literal} {return BOOL_LIT;}
-{hex_literal} {return HEX_LIT;}
-{decimal_literal} {return DECIMAL_LIT;}
 {int_literal} {return INT_LIT;}
 
 

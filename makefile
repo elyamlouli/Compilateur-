@@ -15,7 +15,7 @@ $(prefixe): $(prefixe).tab.o lex.yy.o $(prefixe).o
 	$(CC) $^ -o $@
 
 $(prefixe).tab.c: $(prefixe).y
-	bison -d $(prefixe).y
+	bison -d -v $(prefixe).y
 
 lex.yy.c: $(prefixe).l $(prefixe).tab.h
 	flex $(prefixe).l
