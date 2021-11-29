@@ -44,15 +44,20 @@ int yyerror(char*);
 
 %%
 
-program : CLASS PROGRAM '{' list_field_decl list_method_decl '}'
+program : CLASS PROGRAM '{' field_method '}'
         ;
 
 
+field_method : 
+  | VOID ID '(' method_arg_opt ')' block list_method_decl
+  | type ID '(' method_arg_opt ')' block list_method_decl
+  | field_decl field_method
+  ;
 
 
-list_field_decl : field_decl list_field_decl
-                |
-                ;
+// list_field_decl : field_decl list_field_decl
+//                 | list_method_decl
+//                 ;
 
 field_decl : type field list_field ';'
 
