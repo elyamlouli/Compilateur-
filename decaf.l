@@ -71,7 +71,6 @@ id {alpha}{alpha_num}*
 
 
 {id} { return ID; }
-{digit} { return yytext[0]; }
 [[:space:]] ;
 
 %%

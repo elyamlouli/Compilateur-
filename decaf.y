@@ -48,16 +48,11 @@ program : CLASS PROGRAM '{' field_method '}'
         ;
 
 
-field_method : 
-  | VOID ID '(' method_arg_opt ')' block list_method_decl
-  | type ID '(' method_arg_opt ')' block list_method_decl
-  | field_decl field_method
-  ;
-
-
-// list_field_decl : field_decl list_field_decl
-//                 | list_method_decl
-//                 ;
+field_method : field_decl field_method
+             | VOID ID '(' method_arg_opt ')' block list_method_decl
+             | type ID '(' method_arg_opt ')' block list_method_decl
+             | 
+             ;
 
 field_decl : type field list_field ';'
 
@@ -176,54 +171,23 @@ location : ID
 expr : location
      | method_call
      | literal
-     | expr bin_op expr
+     | expr '+' expr
+     | expr '-' expr
+     | expr '*' expr
+     | expr '/' expr
+     | expr '%' expr
+     | expr '<' expr
+     | expr '>' expr
+     | expr LE expr
+     | expr GE expr
+     | expr EQ expr
+     | expr NE expr
+     | expr AND expr
+     | expr OR expr
      | '-' expr         %prec UMOINS
      | '!' expr
      | '(' expr ')'
-     ;
-     
-     
-
-     
-bin_op : arith_op 
-       | rel_op
-       | eq_op
-       | cond_op 
-       ;
-
-    
-    
-    
-arith_op : '+'
-         | '-'
-         | '*'
-         | '/'
-         | '%'
-         ;
-
-
-
-
-
- rel_op : '<'
-        | '>'
-        | LE
-        | GE
-        ;
-
-
-
-
-eq_op : EQ
-      | NE
-      ;
-
-
-
-
-cond_op : AND
-        | OR
-        ;
+     ;  
 
 
 
