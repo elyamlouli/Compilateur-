@@ -11,7 +11,7 @@ YACC = bison -y
 
 all: $(prefixe)
 
-$(prefixe): $(prefixe).tab.o lex.yy.o $(prefixe).o
+$(prefixe): $(prefixe).tab.o lex.yy.o $(prefixe).o lib.o
 	$(CC) $^ -o $@
 
 $(prefixe).tab.c: $(prefixe).y
@@ -19,6 +19,8 @@ $(prefixe).tab.c: $(prefixe).y
 
 lex.yy.c: $(prefixe).l $(prefixe).tab.h
 	flex $(prefixe).l
+
+lib.o: lib.c lib.h
 
 doc:
 	bison --report=all --report-file=$(prefixe).output \

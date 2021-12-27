@@ -5,3 +5,4 @@ decaf.o
 decaf.tab.*
 decaf.output
 lex.*
+lib.o
