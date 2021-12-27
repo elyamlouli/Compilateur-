@@ -1,0 +1,13 @@
+class AccesHorsBornes {
+    int t [10];
+    void main ()
+    {
+        WriteString ("0=0\n"); // il faut au moins une ligne
+        t[0] = 0;
+        for i = 0, 9
+        {
+            t[i+1] = t[i] + i + 1;
+        }
+        WriteString ("0=1\n"); // il ne faut pas arriver ici
+    }
+}

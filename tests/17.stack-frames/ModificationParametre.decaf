@@ -1,0 +1,17 @@
+class ModificationParametre {
+    int f (int n)
+    {
+        for i = 1, 57
+        {
+            n = n - 1;
+        }
+        return n;
+    }
+    void main ()
+    {
+        int r;
+        r = f (99);
+        WriteInt (r);
+        WriteString ("=42\n");
+    }
+}

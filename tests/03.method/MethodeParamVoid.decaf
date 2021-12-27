@@ -1,0 +1,4 @@
+class MethodeParamVoid {
+    void f (void x) {}
+    void main () {}
+}

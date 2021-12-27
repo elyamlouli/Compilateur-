@@ -1,0 +1,8 @@
+class LiteralChaineIncorrect1 {
+
+    void main ()
+    {
+        WriteString ("\a");
+    }
+
+}

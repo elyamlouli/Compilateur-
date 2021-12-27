@@ -1,0 +1,5 @@
+class GlobaleTableauDimVariable {
+    int n;
+    int t [n];
+    void main () {}
+}

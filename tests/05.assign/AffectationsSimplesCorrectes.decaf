@@ -1,0 +1,13 @@
+class AffectationsSimplesCorrectes {
+    int tab [10];
+    void main ()
+    {
+        int x;
+        x = 42;
+        tab[7] = 42;
+        x += 1;
+        tab[7] += 1;
+        x -= 1;
+        tab[7] -= 1;
+    }
+}

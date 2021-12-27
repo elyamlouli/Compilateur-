@@ -1,0 +1,13 @@
+class PrecedenceSubNeg {
+
+    void main ()
+    {
+        int r;
+        int x;
+        x = 1 - 2;
+        r =  - x - x;
+        WriteInt (r);
+        WriteString ("=2\n");
+    }
+
+}

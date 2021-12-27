@@ -1,0 +1,10 @@
+class IdentificateursCorrects {
+
+    void main ()
+    {
+        int a1b2c3;
+        int _a1_b2_c3_;
+        int _1a_2b_3c_;
+    }
+
+}

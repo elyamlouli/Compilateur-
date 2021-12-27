@@ -1,0 +1,8 @@
+class VariableTypeInconnu {
+
+    void main ()
+    {
+        truc x;
+    }
+
+}

@@ -1,0 +1,8 @@
+class VariableTypeIncorrect {
+
+    void main ()
+    {
+        void x;
+    }
+
+}

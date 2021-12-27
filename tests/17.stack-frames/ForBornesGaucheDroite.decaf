@@ -1,0 +1,21 @@
+class ForBornesGaucheDroite {
+    // dubious...
+    int g;
+    int zero ()
+    {
+        g = 3;
+        return 0;
+    }
+    void main ()
+    {
+        int s;
+        s = 0;
+        g = 0;
+        for i = zero() , g
+        {
+            s = s + 1;
+        }
+        WriteInt (s);
+        WriteString ("=4\n");
+    }
+}

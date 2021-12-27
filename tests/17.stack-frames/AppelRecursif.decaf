@@ -1,0 +1,22 @@
+class AppelRecursif {
+    int plus (int a, int b)
+    {
+        if (a == 0)
+        {
+            return b;
+        }
+        else
+        {
+            int r;
+            r = plus (a-1, b);
+            return r + 1;
+        }
+    }
+    void main ()
+    {
+        int x;
+        x = plus (3, 2);
+        WriteInt (x);
+        WriteString ("=5\n");
+    }
+}

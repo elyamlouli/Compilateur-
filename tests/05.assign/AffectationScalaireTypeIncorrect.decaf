@@ -1,0 +1,9 @@
+class AffectationScalaireTypeIncorrect {
+
+    void main ()
+    {
+        boolean x;
+        x = 42;
+    }
+
+}

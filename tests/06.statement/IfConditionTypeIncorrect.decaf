@@ -1,0 +1,8 @@
+class IfConditionTypeIncorrect {
+
+    void main ()
+    {
+        if (42) {}
+    }
+
+}

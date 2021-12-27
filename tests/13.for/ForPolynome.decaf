@@ -1,0 +1,20 @@
+class ForPolynome {
+    int poly [5];
+    void main ()
+    {
+        int s;
+        int p;
+        int x;
+        poly[0] = 1; poly[1] = 4; poly[2] = 6; poly[3] = 4; poly[4] = 1;
+        s = 0;
+        p = 1;
+        x = 3;
+        for i = 0, 4
+        {
+            s += p * poly[i];
+            p = p * x;
+        }
+        WriteInt (s);
+        WriteString ("=256\n");
+    }
+}

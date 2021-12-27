@@ -1,0 +1,9 @@
+class PrecedenceOrAnd {
+
+    void main ()
+    {
+        if (true || true && false) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
+    }
+
+}

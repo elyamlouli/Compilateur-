@@ -1,0 +1,8 @@
+class ElseSansIf {
+
+    void main ()
+    {
+        else {}
+    }
+
+}

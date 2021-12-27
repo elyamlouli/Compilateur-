@@ -1,0 +1,11 @@
+class AssociativiteMulMod1 {
+
+    void main ()
+    {
+        int r;
+        r = 57 % 17 * 7;
+        WriteInt (r);
+        WriteString ("=42\n");
+    }
+
+}

@@ -1,0 +1,9 @@
+class DecimalDepassement {
+
+    void main ()
+    {
+        int x;
+        x = 12345678901;
+    }
+
+}

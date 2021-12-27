@@ -1,0 +1,11 @@
+class AccesVariableGlobale {
+    int x;
+    void main ()
+    {
+        {
+            x = 2;
+        }
+        WriteInt (x);
+        WriteString ("=2\n");
+    }
+}

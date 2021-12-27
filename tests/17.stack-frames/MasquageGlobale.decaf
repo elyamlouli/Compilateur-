@@ -1,0 +1,14 @@
+class MasquageGlobale {
+    int g;
+    void f (int g)
+    {
+        g = 42;
+    }
+    void main ()
+    {
+        g = 17;
+        f (0);
+        WriteInt (g);
+        WriteString ("=17\n");
+    }
+}

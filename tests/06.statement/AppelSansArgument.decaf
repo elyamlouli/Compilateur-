@@ -1,0 +1,7 @@
+class AppelSansArgument {
+    void p () {}
+    void main ()
+    {
+        p ();
+    }
+}

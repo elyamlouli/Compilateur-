@@ -1,0 +1,3 @@
+class MainIncorrect {
+    void main (int x) {}
+}

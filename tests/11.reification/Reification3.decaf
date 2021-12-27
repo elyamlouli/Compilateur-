@@ -1,0 +1,17 @@
+class Reification3 {
+
+    void main ()
+    {
+        boolean a;
+        boolean b;
+        boolean c;
+        boolean d;
+        a = true;
+        b = false;
+        c = true;
+        d = ((a != b) && (b != c)) == (a == true && c || ! a && c == false);
+        WriteBool (d);
+        WriteString ("=true\n");
+    }
+
+}

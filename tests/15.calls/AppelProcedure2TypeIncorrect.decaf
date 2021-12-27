@@ -1,0 +1,9 @@
+class AppelProcedure2TypeIncorrect {
+    void f (int i, boolean b) {}
+    void main ()
+    {
+        int vi;
+        boolean vb;
+        f (vb, vi);
+    }
+}

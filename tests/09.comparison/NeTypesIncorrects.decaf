@@ -1,0 +1,10 @@
+class NeTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        if (b != x) {}
+    }
+
+}

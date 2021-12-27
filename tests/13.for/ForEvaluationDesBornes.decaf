@@ -1,0 +1,18 @@
+class ForEvaluationDesBornes {
+
+    void main ()
+    {
+        int x;
+        int s;
+        s = 0;
+        x = 10;
+        for i = 1, x
+        {
+            s += 1;
+            x = 5;
+        }
+        WriteInt (s);
+        WriteString ("=10\n");
+    }
+
+}

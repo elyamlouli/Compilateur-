@@ -1,0 +1,8 @@
+class VariableTableau {
+
+    void main ()
+    {
+        int t [10];
+    }
+
+}

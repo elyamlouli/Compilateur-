@@ -1,0 +1,7 @@
+class AffectationTableauDim2 {
+    int tab [10];
+    void main ()
+    {
+        tab[7][0] = 42;
+    }
+}

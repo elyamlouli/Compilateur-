@@ -1,0 +1,4 @@
+class ReturnTypeIncorrect3 {
+    void f () { return 42; }
+    void main () {}
+}

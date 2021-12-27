@@ -1,0 +1,11 @@
+class AssociativiteMulDiv {
+
+    void main ()
+    {
+        int r;
+        r = 9 * 4 / 6 * 7;
+        WriteInt (r);
+        WriteString ("=42\n");
+    }
+
+}

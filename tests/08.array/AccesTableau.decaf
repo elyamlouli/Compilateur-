@@ -1,0 +1,12 @@
+class AccesTableau {
+    int tab [16];
+    int index (int i, int j) {}
+    void main ()
+    {
+        int x;
+        int y;
+        tab [0] = tab [15];
+        tab [x*10+y] = tab [y*10+x];
+        tab [index (x, y)] = tab [index (x+1, y-1)];
+    }
+}

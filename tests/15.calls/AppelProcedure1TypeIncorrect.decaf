@@ -1,0 +1,8 @@
+class AppelProcedure1TypeIncorrect {
+    void f (int i) {}
+    void main ()
+    {
+        boolean vb;
+        f (vb);
+    }
+}

@@ -1,0 +1,22 @@
+class ForSommeTriangulaire {
+
+    void main ()
+    {
+        int n;
+        int s;
+        int r;
+        s = 0;
+        n = 10;
+        for i = 1, n
+        {
+            s += i*(i+1)*(i+2);
+        }
+        s = s / 1 / 2 / 3;
+        r = n*(n+1)*(n+2)*(n+3) / 1 / 2 / 3 / 4;
+        WriteInt (s);
+        WriteString ("=");
+        WriteInt (r);
+        WriteString ("\n");
+    }
+
+}

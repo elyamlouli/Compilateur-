@@ -1,0 +1,10 @@
+class EqTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        if (x == b) {}
+    }
+
+}

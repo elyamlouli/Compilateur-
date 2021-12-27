@@ -1,0 +1,13 @@
+class PrecedenceAddMul {
+
+    void main ()
+    {
+        int r;
+        int x;
+        x = 1;
+        r = (x*x*x*x + 6*x*x*x + 11*x*x + 6*x) / (1*2*3*4);
+        WriteInt (r);
+        WriteString ("=1\n");
+    }
+
+}

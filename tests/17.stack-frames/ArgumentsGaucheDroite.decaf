@@ -1,0 +1,20 @@
+class ArgumentsGaucheDroite {
+    int g;
+    int deux ()
+    {
+        g = 3;
+        return 2;
+    }
+    int f (int a, int b, int c)
+    {
+        return a*100 + b*10 + c;
+    }
+    void main ()
+    {
+        int r;
+        g = 1;
+        r = f (g, deux(), g);
+        WriteInt (r);
+        WriteString ("=123\n");
+    }
+}

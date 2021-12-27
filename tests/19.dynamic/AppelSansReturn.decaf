@@ -1,0 +1,17 @@
+class AppelSansReturn {
+    int f (int x)
+    {
+        if (x % 2 == 0)
+        {
+            return x / 2;
+        }
+    }
+    void main ()
+    {
+        int r;
+        WriteString ("0=0\n"); // il faut au moins une ligne
+        r = f (8);
+        r = f (17);
+        WriteString ("0=1\n"); // il ne faut pas arriver ici
+    }
+}

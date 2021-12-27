@@ -1,0 +1,9 @@
+class PrecedenceAndNot {
+
+    void main ()
+    {
+        if (! false && false) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=false\n");
+    }
+
+}

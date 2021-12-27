@@ -1,0 +1,8 @@
+class ForSansBorneSup {
+
+    void main ()
+    {
+        for i = 1 , {}
+    }
+
+}

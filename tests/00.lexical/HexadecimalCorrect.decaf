@@ -1,0 +1,9 @@
+class HexadecimalCorrect {
+
+    void main ()
+    {
+        int x;
+        x = 0xfa1afe1;
+    }
+
+}

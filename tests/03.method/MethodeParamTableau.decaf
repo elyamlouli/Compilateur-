@@ -1,0 +1,4 @@
+class MethodeParamTableau {
+    void f (int t [10]) {}
+    void main () {}
+}

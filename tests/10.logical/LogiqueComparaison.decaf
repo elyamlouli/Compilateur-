@@ -1,0 +1,16 @@
+class LogiqueComparaison {
+
+    void main ()
+    {
+        boolean a;
+        boolean b;
+        boolean c;
+        a = true;
+        b = false;
+        c = true;
+        if (((a != b) && (b != c)) == (a == true && c || ! a && c == false))
+        {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
+    }
+
+}

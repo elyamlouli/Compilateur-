@@ -1,0 +1,9 @@
+class HexadecimalDepassement {
+
+    void main ()
+    {
+        int x;
+        x = 0x123456789;
+    }
+
+}

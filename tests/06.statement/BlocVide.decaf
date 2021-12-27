@@ -1,0 +1,8 @@
+class BlocVide {
+
+    void main ()
+    {
+        {}
+    }
+
+}

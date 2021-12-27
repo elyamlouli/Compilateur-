@@ -1,0 +1,4 @@
+class ReturnTypeIncorrect2 {
+    int f () { return true; }
+    void main () {}
+}

@@ -1,0 +1,17 @@
+class MasquageVariableLocale {
+
+    void main ()
+    {
+        int x;
+        x = 1;
+        {
+            int x;
+            x = 2;
+            WriteInt (x);
+            WriteString ("=2\n");
+        }
+        WriteInt (x);
+        WriteString ("=1\n");
+    }
+
+}

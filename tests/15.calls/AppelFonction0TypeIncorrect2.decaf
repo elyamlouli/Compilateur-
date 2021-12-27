@@ -1,0 +1,8 @@
+class AppelFonction0TypeIncorrect2 {
+    int f () {}
+    void main ()
+    {
+        boolean rb;
+        rb = f ();
+    }
+}

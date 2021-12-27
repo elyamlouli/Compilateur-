@@ -1,0 +1,7 @@
+class MethodesImbriquees {
+    void f (int t)
+    {
+        int g () {}
+    }
+    void main () {}
+}

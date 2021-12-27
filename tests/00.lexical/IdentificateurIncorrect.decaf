@@ -1,0 +1,8 @@
+class IdentificateurIncorrect {
+
+    void main ()
+    {
+        int a.b;
+    }
+
+}

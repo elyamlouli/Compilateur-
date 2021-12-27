@@ -1,0 +1,7 @@
+class AppelSansVirgule {
+    void p (int x, boolean y) {}
+    void main ()
+    {
+        p (1 true);
+    }
+}

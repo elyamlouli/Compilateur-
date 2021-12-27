@@ -1,0 +1,9 @@
+class DecimalCorrect {
+
+    void main ()
+    {
+        int x;
+        x = 123;
+    }
+
+}

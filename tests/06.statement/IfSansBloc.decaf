@@ -1,0 +1,8 @@
+class IfSansBloc {
+
+    void main ()
+    {
+        if (1 == 1)
+    }
+
+}

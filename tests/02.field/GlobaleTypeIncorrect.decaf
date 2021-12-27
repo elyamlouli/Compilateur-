@@ -1,0 +1,4 @@
+class GlobaleTypeIncorrect {
+    void x;
+    void main () {}
+}
