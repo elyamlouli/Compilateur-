@@ -1,0 +1,10 @@
+class AndTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        if (b && x) {}
+    }
+
+}

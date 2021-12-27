@@ -1,0 +1,19 @@
+class CourtCircuitOr {
+    int c;
+    boolean vrai ()
+    {
+        c = 1;
+        return true;
+    }
+    void main ()
+    {
+        int x;
+        x = 17;
+        c = 0;
+        if (x == 17 || vrai ())
+        {
+        }
+        WriteInt (c);
+        WriteString ("=0\n");
+    }
+}

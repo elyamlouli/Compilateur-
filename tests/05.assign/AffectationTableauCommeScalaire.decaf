@@ -1,0 +1,7 @@
+class AffectationTableauCommeScalaire {
+    int tab [10];
+    void main ()
+    {
+        tab = 42;
+    }
+}

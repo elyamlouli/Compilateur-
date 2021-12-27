@@ -1,0 +1,37 @@
+class TripleIf {
+
+    void main ()
+    {
+        int a;
+        int b;
+        int c;
+        int d;
+        int m;
+        a = 2; b = 3; c = 4; d = 1;
+        if (a > b)
+        {
+            if (a > c)
+            {
+                if (a > d) {m = a;} else {m = d;}
+            }
+            else
+            {
+                if (c > d) {m = c;} else {m = d;}
+            }
+        }
+        else
+        {
+            if (b > c)
+            {
+                if (b > d) {m = b;} else {m = d;}
+            }
+            else
+            {
+                if (c > d) {m = c;} else {m = d;}
+            }
+        }
+        WriteInt (m);
+        WriteString ("=4\n");
+    }
+
+}

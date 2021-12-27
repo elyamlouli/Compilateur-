@@ -1,0 +1,7 @@
+class AffectationTableauTypeIncorrect {
+    boolean t [10];
+    void main ()
+    {
+        t[0] = 42;
+    }
+}

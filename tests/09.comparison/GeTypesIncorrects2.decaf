@@ -1,0 +1,10 @@
+class GeTypesIncorrects2 {
+
+    void main ()
+    {
+        boolean b;
+        boolean c;
+        if (b >= c) {}
+    }
+
+}

@@ -1,0 +1,4 @@
+class GlobaleTableauMultiDim {
+    int t [10][10];
+    void main () {}
+}

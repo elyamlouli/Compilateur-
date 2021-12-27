@@ -1,0 +1,8 @@
+class VariableMotCle {
+
+    void main ()
+    {
+        int true;
+    }
+
+}

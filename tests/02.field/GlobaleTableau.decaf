@@ -1,0 +1,7 @@
+class GlobaleTableau {
+    int gi [10];
+    boolean gb [10];
+    int gi1 [10], gi2 [15], gi3 [20];
+    boolean gb1 [10], gb2 [15], gb3 [20];
+    void main () {}
+}

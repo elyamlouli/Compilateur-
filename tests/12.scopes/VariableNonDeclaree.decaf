@@ -1,0 +1,9 @@
+class VariableNonDeclaree {
+
+    void main ()
+    {
+        int y;
+        y = x;
+    }
+
+}

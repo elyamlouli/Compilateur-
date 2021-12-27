@@ -1,0 +1,11 @@
+class ForAvecContinue {
+
+    void main ()
+    {
+        for i = 1, 10
+        {
+            continue;
+        }
+    }
+
+}

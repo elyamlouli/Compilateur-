@@ -1,0 +1,4 @@
+class GlobaleTypeMotCle {
+    true x;
+    void main () {}
+}

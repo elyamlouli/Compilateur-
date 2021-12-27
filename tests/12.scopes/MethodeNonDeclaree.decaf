@@ -1,0 +1,8 @@
+class MethodeNonDeclaree {
+
+    void main ()
+    {
+        inconnue (42);
+    }
+
+}

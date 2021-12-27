@@ -1,0 +1,21 @@
+class InitialisationLocale {
+    int f (int i)
+    {
+        int x, y, z;
+        x = 11; y = 12; z = 13;
+        return i;
+    }
+    int g (int i)
+    {
+        int v;
+        return v;
+    }
+    void main ()
+    {
+        int r;
+        r = f (17);
+        r = g (17);
+        WriteInt (r);
+        WriteString ("=0\n");
+    }
+}

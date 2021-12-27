@@ -1,0 +1,11 @@
+class AssociativiteEqNe {
+
+    void main ()
+    {
+        int x;
+        x = 17;
+        if (x == 17 != false) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
+    }
+
+}

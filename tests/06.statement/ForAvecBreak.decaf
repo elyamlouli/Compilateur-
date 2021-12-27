@@ -1,0 +1,11 @@
+class ForAvecBreak {
+
+    void main ()
+    {
+        for i = 1, 10
+        {
+            break;
+        }
+    }
+
+}

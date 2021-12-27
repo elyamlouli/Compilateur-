@@ -1,0 +1,10 @@
+class AppelFonction2TypeIncorrect {
+    boolean f (int i, boolean b) {}
+    void main ()
+    {
+        int vi;
+        boolean vb;
+        int ri;
+        ri = f (vi, vb);
+    }
+}

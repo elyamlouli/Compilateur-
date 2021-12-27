@@ -1,0 +1,8 @@
+class ForBorneTypeIncorrect {
+
+    void main ()
+    {
+        for i = false, 42 {}
+    }
+
+}

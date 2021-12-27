@@ -1,0 +1,4 @@
+class MethodeNomMotCle {
+    void true () {}
+    void main () {}
+}

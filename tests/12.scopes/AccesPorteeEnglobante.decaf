@@ -1,0 +1,14 @@
+class AccesPorteeEnglobante {
+
+    void main ()
+    {
+        int x;
+        x = 1;
+        {
+            x = 2;
+        }
+        WriteInt (x);
+        WriteString ("=2\n");
+    }
+
+}

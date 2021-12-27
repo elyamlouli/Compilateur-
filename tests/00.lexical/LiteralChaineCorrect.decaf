@@ -1,0 +1,8 @@
+class LiteralChaineCorrect {
+
+    void main ()
+    {
+        WriteString ("a1A#\\\"\'");
+    }
+
+}

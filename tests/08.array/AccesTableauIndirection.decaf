@@ -1,0 +1,17 @@
+class AccesTableauIndirection {
+    int ini [3];
+    int ind [3];
+    int t0 [3];
+    int t1 [3];
+    void main ()
+    {
+        int i;
+        ini[0] = 10; ini[1] = 11; ini[2] = 12;
+        ind[0] = 1; ind[1] = 2; ind[2] = 0;
+        t0[ind[0]] = ini[0]; t0[ind[1]] = ini[1]; t0[ind[2]] = ini[2];
+        t1[0] = t0[ind[0]];  t1[1] = t0[ind[1]];  t1[2] = t0[ind[2]];
+        WriteInt (t1[0]); WriteString ("="); WriteInt (ini[0]); WriteString ("\n");
+        WriteInt (t1[1]); WriteString ("="); WriteInt (ini[1]); WriteString ("\n");
+        WriteInt (t1[2]); WriteString ("="); WriteInt (ini[2]); WriteString ("\n");
+    }
+}

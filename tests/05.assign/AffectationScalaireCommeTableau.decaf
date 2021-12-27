@@ -1,0 +1,7 @@
+class AffectationScalaireCommeTableau {
+    void main ()
+    {
+        int x;
+        x[7] = 42;
+    }
+}

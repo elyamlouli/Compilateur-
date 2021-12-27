@@ -1,0 +1,15 @@
+class ForSansIteration {
+
+    void main ()
+    {
+        int s;
+        s = 0;
+        for i = 42, 17
+        {
+            s += 1;
+        }
+        WriteInt (s);
+        WriteString ("=0\n");
+    }
+
+}

@@ -1,0 +1,8 @@
+class ForSansVirgule {
+
+    void main ()
+    {
+        for i = 1 2 {}
+    }
+
+}

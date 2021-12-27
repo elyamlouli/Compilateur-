@@ -1,0 +1,10 @@
+class NegTypesIncorrects {
+
+    void main ()
+    {
+        boolean b;
+        int y;
+        y = - b;
+    }
+
+}

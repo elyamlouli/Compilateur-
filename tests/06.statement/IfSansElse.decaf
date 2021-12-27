@@ -1,0 +1,8 @@
+class IfSansElse {
+
+    void main ()
+    {
+        if (1 == 1) {}
+    }
+
+}

@@ -1,0 +1,8 @@
+class ContinueHorsBoucle {
+
+    void main ()
+    {
+        continue;
+    }
+
+}

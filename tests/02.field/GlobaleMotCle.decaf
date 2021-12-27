@@ -1,0 +1,4 @@
+class GlobaleMotCle {
+    int true;
+    void main () {}
+}

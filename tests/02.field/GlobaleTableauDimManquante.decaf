@@ -1,0 +1,4 @@
+class GlobaleTableauDimManquante {
+    int t [];
+    void main () {}
+}

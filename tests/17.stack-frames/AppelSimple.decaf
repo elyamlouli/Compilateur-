@@ -1,0 +1,13 @@
+class AppelSimple {
+    int f (int a, int b, int c)
+    {
+        return a*100 + b*10 + c;
+    }
+    void main ()
+    {
+        int r;
+        r = f (1, 2, 3);
+        WriteInt (r);
+        WriteString ("=123\n");
+    }
+}

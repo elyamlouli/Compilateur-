@@ -1,0 +1,4 @@
+class GlobaleTableauDimNegative {
+    int t [-10];
+    void main () {}
+}

@@ -1,0 +1,7 @@
+class AppelUnArgument {
+    void p (int x) {}
+    void main ()
+    {
+        p (1);
+    }
+}

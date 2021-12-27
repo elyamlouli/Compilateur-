@@ -1,0 +1,11 @@
+class ModTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        int y;
+        y = x % b;
+    }
+
+}

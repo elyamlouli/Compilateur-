@@ -1,0 +1,8 @@
+class ForBorneManquante {
+
+    void main ()
+    {
+        for i = 1 {}
+    }
+
+}

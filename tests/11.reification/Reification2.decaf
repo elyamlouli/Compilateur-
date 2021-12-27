@@ -1,0 +1,11 @@
+class Reification2 {
+
+    void main ()
+    {
+        boolean b;
+        b = ! false && false;
+        WriteBool (b);
+        WriteString ("=false\n");
+    }
+
+}

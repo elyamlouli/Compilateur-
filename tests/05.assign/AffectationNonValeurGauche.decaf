@@ -1,0 +1,8 @@
+class AffectationNonValeurGauche {
+
+    void main ()
+    {
+        17 = 42;
+    }
+
+}

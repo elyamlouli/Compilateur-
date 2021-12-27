@@ -1,0 +1,11 @@
+class AssociativiteAddSub {
+
+    void main ()
+    {
+        int r;
+        r = 57 - 99 + 42;
+        WriteInt (r);
+        WriteString ("=0\n");
+    }
+
+}

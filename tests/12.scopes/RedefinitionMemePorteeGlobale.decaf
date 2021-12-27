@@ -1,0 +1,4 @@
+class RedefinitionMemePorteeGlobale {
+    void WriteString () {}
+    void main () {}
+}

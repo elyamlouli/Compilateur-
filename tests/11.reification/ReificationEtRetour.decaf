@@ -1,0 +1,17 @@
+class ReificationEtRetour {
+
+    void main ()
+    {
+        boolean bx;
+        boolean by;
+        int x;
+        int y;
+        x = 8;
+        y = 4;
+        bx = 1 <= x && x <= 10;
+        by = 3 <= y && y <= 7;
+        if (bx && by) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
+    }
+
+}

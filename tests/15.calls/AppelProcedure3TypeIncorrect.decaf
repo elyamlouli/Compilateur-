@@ -1,0 +1,10 @@
+class AppelProcedure3TypeIncorrect {
+    void f (int i, boolean b, int j) {}
+    void main ()
+    {
+        int vi;
+        boolean vb;
+        int vj;
+        f (vi, vj, vb);
+    }
+}

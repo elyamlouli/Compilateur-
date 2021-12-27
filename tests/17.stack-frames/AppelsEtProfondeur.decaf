@@ -1,0 +1,37 @@
+class AppelsEtProfondeur {
+    int g (int i)
+    {
+        int v;
+        return v+i;
+    }
+    int f1 (int i)
+    {
+        int x;
+        x = 11;
+        return g (i);
+    }
+    int f2 (int i)
+    {
+        int x, y;
+        x = 21; y = 22;
+        return f1 (i);
+    }
+    int f3 (int i)
+    {
+        int x, y, z;
+        x = 31; y = 32; z = 33;
+        return g (i);
+    }
+    void main ()
+    {
+        int r;
+        r = g (0);
+        WriteInt (r); WriteString ("=0\n");
+        r = f1 (0);
+        WriteInt (r); WriteString ("=0\n");
+        r = f2 (0);
+        WriteInt (r); WriteString ("=0\n");
+        r = f3 (0);
+        WriteInt (r); WriteString ("=0\n");
+    }
+}

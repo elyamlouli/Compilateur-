@@ -1,0 +1,11 @@
+class DivTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        int y;
+        y = b / x;
+    }
+
+}

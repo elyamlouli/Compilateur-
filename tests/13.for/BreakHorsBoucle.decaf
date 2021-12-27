@@ -1,0 +1,8 @@
+class BreakHorsBoucle {
+
+    void main ()
+    {
+        break;
+    }
+
+}

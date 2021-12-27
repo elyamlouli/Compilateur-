@@ -1,0 +1,9 @@
+class NotTypesIncorrects {
+
+    void main ()
+    {
+        int x;
+        if (! x) {}
+    }
+
+}

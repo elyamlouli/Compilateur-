@@ -1,0 +1,10 @@
+class LeTypesIncorrects1 {
+
+    void main ()
+    {
+        int x;
+        boolean b;
+        if (b <= x) {}
+    }
+
+}

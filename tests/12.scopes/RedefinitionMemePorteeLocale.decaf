@@ -1,0 +1,9 @@
+class RedefinitionMemePorteeLocale {
+
+    void main ()
+    {
+        int x;
+        int x;
+    }
+
+}

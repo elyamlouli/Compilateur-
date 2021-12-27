@@ -1,0 +1,4 @@
+class MethodeParamMotCle {
+    void f (int true) {}
+    void main () {}
+}

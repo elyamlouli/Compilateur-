@@ -1,0 +1,11 @@
+class WriteBool {
+
+    void main ()
+    {
+        WriteBool (true);
+        WriteString ("=true\n");
+        WriteBool (false);
+        WriteString ("=false\n");
+    }
+
+}
