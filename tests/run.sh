@@ -5,7 +5,7 @@
 #
 
 # Nom du compilateur
-COMPILER=./../decaf
+COMPILER=./decaf
 
 # Utilisation des entrée et sortie standard
 STANDARD_CHANNELS=0

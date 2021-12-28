@@ -6,3 +6,4 @@ decaf.tab.*
 decaf.output
 lex.*
 lib.o
+tests

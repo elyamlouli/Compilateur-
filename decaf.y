@@ -1,11 +1,23 @@
 %{
+#include "decaf.h"
 #include <stdio.h>
+
 extern int yylex();
 int yyerror(char*);
 
+struct Symbole;
+typedef struct Symbole Symbole;
 %}
 
-%token COMMENT
+%union {
+    long int intval;
+    char * strval;
+    struct {
+        struct Symbole * ptr;
+    } exprval;
+}
+
+// %token COMMENT
 %token BOOLEAN
 %token BREAK
 %token CLASS
@@ -16,7 +28,11 @@ int yyerror(char*);
 %token INT
 %token RETURN
 %token VOID
-%token PROGRAM
+
+%token MAIN
+
+
+// %token PROGRAM
 %token GE
 %token LE
 %token EQ
@@ -26,12 +42,20 @@ int yyerror(char*);
 %token AND
 %token OR
 
-%token STRING_LIT
-%token CHAR_LIT
-%token BOOL_LIT
-%token INT_LIT
+%token WI
+%token RI
+%token WB
+%token WS
+
+%token <strval> STRING_LIT
+%token <intval> CHAR_LIT
+%token <intval> BOOL_LIT
+%token <intval> INT_LIT
 
 %token ID
+
+
+%type <exprval> literal
 
 %left OR
 %left AND
@@ -44,14 +68,14 @@ int yyerror(char*);
 
 %%
 
-program : CLASS PROGRAM '{' field_method '}'
+program : CLASS ID '{' field_method '}'
         ;
 
 
 field_method : field_decl field_method
              | VOID ID '(' method_arg_opt ')' block list_method_decl
              | type ID '(' method_arg_opt ')' block list_method_decl
-             | 
+             | VOID MAIN '(' ')' block
              ;
 
 field_decl : type field list_field ';'
@@ -68,7 +92,7 @@ field : ID
 
 
 list_method_decl : method_decl list_method_decl
-                 |
+                 | VOID MAIN '(' ')' block 
                  ;
 
 method_decl : method_type ID '(' method_arg_opt ')' block
@@ -118,7 +142,7 @@ list_statement : statement list_statement
 
 statement : location assign_op expr ';'
           | method_call ';'
-          | IF '(' expr ')' block statement_else_opt     
+          | IF '(' BOOL_LIT ')' block statement_else_opt
           | FOR ID '=' expr ',' expr block
           | RETURN statement_expr_opt ';'
           | BREAK ';'
@@ -146,6 +170,7 @@ assign_op : '='
 
 
 method_call : method_name '(' method_call_expr_opt ')'
+            | WS '(' STRING_LIT ')'
             ;
 
 method_name : ID
@@ -171,7 +196,7 @@ location : ID
 expr : location
      | method_call
      | literal
-     | expr '+' expr
+     | INT_LIT '+' INT_LIT
      | expr '-' expr
      | expr '*' expr
      | expr '/' expr
@@ -192,9 +217,45 @@ expr : location
 
 
 
-literal : INT_LIT
-        | CHAR_LIT
-        | BOOL_LIT
+literal : INT_LIT 
+          {
+              char name[20];
+              int res = snprintf(name, 20, "-I%li", $1);
+              if (res < 0 || res >= 20) {
+                  perror("int_lit snprintf");
+                  exit(1);
+              }
+              Symbole * sym = newconst(SYMTABLE, name);
+              sym->type = INT_LIT;
+              sym->value.int_lit = $1;
+              $$.ptr = sym;
+          }
+        | CHAR_LIT 
+          {
+              char name[20];
+              int res = snprintf(name, 20, "-C%li", $1);
+              if (res < 0 || res >= 20) {
+                  perror("char_lit snprintf");
+                  exit(1);
+              }
+              Symbole * sym = newconst(SYMTABLE, name);
+              sym->type = CHAR_LIT;
+              sym->value.char_lit = $1;
+              $$.ptr = sym;
+          }
+        | BOOL_LIT 
+          {
+              char name[20];
+              int res = snprintf(name, 20, "-B%li", $1);
+              if (res < 0 || res >= 20) {
+                  perror("bool_lit snprintf");
+                  exit(1);
+              }
+              Symbole * sym = newconst(SYMTABLE, name);
+              sym->type = BOOL_LIT;
+              sym->value.bool_lit = $1;
+              $$.ptr = sym;
+          }
         ;
 
 

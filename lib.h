@@ -30,7 +30,7 @@ HashTableBucket * HashTableBucket_free(HashTableBucket *bucket);
 struct HashTable {
     size_t size;
     size_t count;
-    HashTableBucket ** buckets;
+    HashTableBucketRoot * buckets;
 } ;
 
 HashTable * HashTable_new();
@@ -75,11 +75,19 @@ Symbole * lookup(SymboleTableRoot * root, const char * name);
 
 int newname(SymboleTableRoot * root, const char * name);
 
+Symbole * newconst(SymboleTableRoot * root, const char * name);
 
 struct Symbole {
+    enum { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR } type;
     char * name;
-    int32_t value;
-    int8_t type;
+    union {
+        // un truc pour les fonctions
+        int32_t int_lit;    // pour les constantes entiere
+        int8_t bool_lit;    // pour les constantes boolenne
+        char * string_lit;  // pour les constantes string
+        char char_lit;    // pour les constantes char
+    } value;
+    uint32_t ptr; // adresse dans le code mips
 };
 
 Symbole * Symbole_new(const char * name);

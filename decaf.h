@@ -3,6 +3,6 @@
 
 #include "lib.h"
 
-SymboleTableRoot * symtable;
+extern SymboleTableRoot * SYMTABLE;
 
 #endif

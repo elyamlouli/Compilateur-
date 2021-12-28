@@ -5,8 +5,11 @@
 
 extern int yyparse(void);
 
+SymboleTableRoot * SYMTABLE;
+
 int main(void) {
-    symtable = SymboleTableRoot_new();
+    SYMTABLE = SymboleTableRoot_new();
     int res = yyparse();
+    SymboleTableRoot_free(SYMTABLE);
     return res;
 }

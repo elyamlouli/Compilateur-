@@ -3,27 +3,30 @@
 %{
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include "decaf.tab.h"
+
+extern int yyerror();
 %}
 
 comment "//"(.)*"\n"
 alpha [a-zA-Z_]
 digit [0-9]
-char [ -!#-&(-\[\]-~]
+char [ -!#-&(-\[\]-~]|"\\\\"|"\\'"|"\\t"|"\\n"|"\\\""
 
 string_literal \"{char}*\"
 char_literal \'{char}\'
 bool_literal true|false
-hex_literal "Ox"{hex_digit}{hex_digit}*
+hex_literal "0x"{hex_digit}{hex_digit}*
 decimal_literal {digit}{digit}*
-int_literal {decimal_literal}|{hex_literal}
+ // int_literal {decimal_literal}|{hex_literal}
 hex_digit {digit}|[a-f]|[A-F]
 alpha_num {alpha}|{digit}
 id {alpha}{alpha_num}*
 
 
 %%
-{comment} { return COMMENT; }
+{comment} ;
 
  /* Mots réservés */
 "boolean" { return BOOLEAN; }
@@ -37,8 +40,9 @@ id {alpha}{alpha_num}*
 "return" { return RETURN; }
 "void" { return VOID; }
 
+"main" { return MAIN; }
+
  /* Fin des mots réservés */
-"Program" {return PROGRAM;}
 
 "+"|"-"|"*"|"/"|"%" { return yytext[0]; }
 
@@ -63,14 +67,57 @@ id {alpha}{alpha_num}*
 "||" { return OR; }
 "!" { return yytext[0]; }
 
-{string_literal} {return STRING_LIT;}
-{char_literal} {return CHAR_LIT;}
-{bool_literal} {return BOOL_LIT;}
-{int_literal} {return INT_LIT;}
+{string_literal} { puts("string"); return STRING_LIT;}
 
+{char_literal} {
+    if (yytext[0] == '\\') {
+        if (yytext[1] == 't') {
+            yylval.intval = '\t';
+        } else if (yytext[1] == 'n') {
+            yylval.intval == 'n';
+        } else if (yytext[1] == '\'') {
+            yylval.intval = '\'';
+        } else if (yytext[1] == '"') {
+            yylval.intval = '"';
+        } else if (yytext[1] == '\\') {
+            yylval.intval = '\\';
+        }
+    } else {
+        yylval.intval = yytext[0];
+    }
+    return CHAR_LIT;
+}
 
+{bool_literal} {
+    yylval.intval = (yytext[0] == 't');
+    return BOOL_LIT;
+}
 
+{decimal_literal} {
+    if (strlen(yytext) > 10) {
+        yyerror();
+        return YYerror;
+    }
+    sscanf(yytext,"%li",&(yylval.intval));
+    return INT_LIT;
+}
+
+{hex_literal} {
+    if (strlen(yytext) > 10) {
+        yyerror();
+        return YYerror;
+    }
+    sscanf(yytext,"%x",&(yylval.intval));
+    return INT_LIT;
+}
+
+"," { return yytext[0]; }
+
+"WriteString" { return WS; }
 {id} { return ID; }
 [[:space:]] ;
 
+. { puts("error"); }
+
 %%
+

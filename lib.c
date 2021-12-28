@@ -34,14 +34,14 @@ HashTable * HashTable_new() {
     CHECKMALLOC(hashtable);
     hashtable->size = 8;
     hashtable->count = 0;
-    hashtable->buckets = calloc(8, sizeof(HashTableBucketRoot));
+    hashtable->buckets = calloc(8, sizeof(HashTableBucketRoot*));
     CHECKMALLOC(hashtable->buckets);
     return hashtable;
 }
 
 void HashTable_free(HashTable * hashtable){
     for (size_t i = 0; i < hashtable->size; i++) {
-        HashTableBucket * bucket = hashtable->buckets[i]->next;
+        HashTableBucket * bucket = hashtable->buckets[i].next; 
         while (bucket != NULL) {
             bucket = HashTableBucket_free(bucket);
         }
@@ -69,9 +69,9 @@ size_t hash_str(const char* s) {
 int HashTable_insert(HashTable * hashtable, Symbole * symbole) {
     size_t id = hash_str(symbole->name) % hashtable->size;
 
-    HashTableBucket * bucket = hashtable->buckets[id]->next;
+    HashTableBucket * bucket = hashtable->buckets[id].next;
     if (bucket == NULL) {
-        hashtable->buckets[id]->next = HashTableBucket_new(symbole);
+        hashtable->buckets[id].next = HashTableBucket_new(symbole);
         hashtable->count++;
         return 0;
     }
@@ -92,7 +92,7 @@ int HashTable_insert(HashTable * hashtable, Symbole * symbole) {
 
 Symbole * HashTable_get(HashTable * hashtable, const char * name) {
     size_t id = hash_str(name) % hashtable->size;
-    HashTableBucket *bucket = hashtable->buckets[id]->next;
+    HashTableBucket *bucket = hashtable->buckets[id].next;
     while (bucket != NULL ) {
         if (strcmp(bucket->symbole->name, name) == 0) {
             return bucket->symbole;
@@ -164,8 +164,33 @@ Symbole * lookup(SymboleTableRoot * root, const char * name ) {
 
 int newname(SymboleTableRoot * root, const char * name) {
     Symbole * symbole = Symbole_new(name);
-    return HashTable_insert(root->next->table, symbole);
+    int res = HashTable_insert(root->next->table, symbole);
+    Symbole_free(symbole);
+    return res;
 }
+
+
+// "sqdqdqsf"
+// -C\t
+// -I10000000
+// -B1/0 char [15]
+Symbole * newconst(SymboleTableRoot * root, const char * name) {
+    SymboleTable * symtable = root->next;
+    while (symtable->next != NULL) {
+        symtable = symtable->next;
+    }
+
+    Symbole * symbole = HashTable_get(symtable->table, name);
+    if (symbole != NULL) {
+        return symbole;
+    }
+
+    symbole = Symbole_new(name);
+    HashTable_insert(symtable->table, symbole);
+
+    return symbole;
+}
+
 
 Symbole * Symbole_new(const char * name) {
     Symbole * symbole = malloc(sizeof(Symbole));
@@ -174,7 +199,9 @@ Symbole * Symbole_new(const char * name) {
     symbole->name = malloc(size);
     CHECKMALLOC(symbole->name);
     strncpy(symbole->name, name, size);
-    symbole->value = 0;
+    
+    // on différencie selon le type 
+    symbole->value.string_lit = NULL;
     symbole->type = 0;
     return symbole;
 }
