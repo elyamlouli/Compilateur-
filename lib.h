@@ -11,6 +11,9 @@ typedef struct SymboleTableRoot SymboleTableRoot;
 typedef struct SymboleTable SymboleTable;
 typedef struct Symbole Symbole;
 
+typedef struct Code Code;
+typedef struct Quad Quad;
+
 
 /* Section pour la HashTable */
 
@@ -26,6 +29,8 @@ struct HashTableBucket {
 HashTableBucket * HashTableBucket_new(Symbole * symbole);
 
 HashTableBucket * HashTableBucket_free(HashTableBucket *bucket);
+
+void HashTable_dump(HashTable * hashtable);
 
 struct HashTable {
     size_t size;
@@ -57,6 +62,7 @@ SymboleTable * SymboleTable_free(SymboleTable * symtable);
 /* Section pour la SymboleTableRoot */
 
 struct SymboleTableRoot {
+    size_t temporary;
     SymboleTable * next;
 };
 
@@ -64,6 +70,7 @@ SymboleTableRoot * SymboleTableRoot_new();
 
 void SymboleTableRoot_free(SymboleTableRoot * root);
 
+void SymboleTableRoot_dump(SymboleTableRoot * root);
 
 /* Fonctions de manipulation des symboles */
 
@@ -73,12 +80,15 @@ void popctx(SymboleTableRoot * root);
 
 Symbole * lookup(SymboleTableRoot * root, const char * name);
 
-int newname(SymboleTableRoot * root, const char * name);
+Symbole * newname(SymboleTableRoot * root, const char * name);
 
 Symbole * newconst(SymboleTableRoot * root, const char * name);
 
+Symbole * newtemp (SymboleTableRoot * root);
+
+
 struct Symbole {
-    enum { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR } type;
+    enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB } type;
     char * name;
     union {
         // un truc pour les fonctions
@@ -94,5 +104,46 @@ Symbole * Symbole_new(const char * name);
 
 void Symbole_free(Symbole * symbole);
 
+
+
+
+struct Quad {
+  enum quad_kind { 
+    OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
+    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
+    OP_INCR, OP_DECR, OP_EQ,
+    OP_AND, OP_OR, OP_NOT,
+    OP_UMOINS,
+    } kind;
+  Symbole * sym1;
+  Symbole * sym2;
+  Symbole * sym3;
+};
+
+struct Code {
+    unsigned int capacity;
+    unsigned int nextquad;
+    Quad * quads;
+};
+
+struct Code * Code_new();
+
+void Code_free(Code * code);
+
+void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole * s3);
+
+
+
+struct ListNames {
+    size_t size;
+    size_t count;
+    char ** names;
+};
+
+struct ListNames * ListNames_new();
+
+void ListNames_free(struct ListNames * l);
+
+void ListNames_add(struct ListNames * l, const char * name);
 
 #endif

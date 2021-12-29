@@ -4,9 +4,13 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "decaf.tab.h"
 
 extern int yyerror();
+extern int yyleng;
+
+#define CHECKMALLOC(op) if (op == NULL) { perror(#op); exit(1); }
 %}
 
 comment "//"(.)*"\n"
@@ -60,14 +64,18 @@ id {alpha}{alpha_num}*
 "!=" { return NE; }
 
 "=" { return yytext[0]; }
-"-=" { return SUB; }
-"+=" { return ADD; }
+"-=" { return DECR; }
+"+=" { return INCR; }
 
 "&&" { return AND; }
 "||" { return OR; }
 "!" { return yytext[0]; }
 
-{string_literal} { puts("string"); return STRING_LIT;}
+{string_literal} { 
+    yylval.strval = strndup(yytext, yyleng);
+    CHECKMALLOC(yylval.strval);
+    return STRING_LIT;
+}
 
 {char_literal} {
     if (yytext[0] == '\\') {
@@ -114,7 +122,13 @@ id {alpha}{alpha_num}*
 "," { return yytext[0]; }
 
 "WriteString" { return WS; }
-{id} { return ID; }
+
+{id} { 
+    yylval.strval = strndup(yytext, yyleng);
+    CHECKMALLOC(yylval.strval);
+    return ID; 
+}
+
 [[:space:]] ;
 
 . { puts("error"); }

@@ -11,6 +11,9 @@ typedef struct SymboleTableRoot SymboleTableRoot;
 typedef struct SymboleTable SymboleTable;
 typedef struct Symbole Symbole;
 
+typedef struct Code Code;
+typedef struct Quad Quad;
+
 #define CHECKMALLOC(op) if (op == NULL) { perror(#op); exit(1); }
 
 
@@ -34,7 +37,7 @@ HashTable * HashTable_new() {
     CHECKMALLOC(hashtable);
     hashtable->size = 8;
     hashtable->count = 0;
-    hashtable->buckets = calloc(8, sizeof(HashTableBucketRoot*));
+    hashtable->buckets = calloc(hashtable->size, sizeof(HashTableBucketRoot*));
     CHECKMALLOC(hashtable->buckets);
     return hashtable;
 }
@@ -79,7 +82,7 @@ int HashTable_insert(HashTable * hashtable, Symbole * symbole) {
     HashTableBucket * bucket_prec;
     while (bucket != NULL ) {
         if (strcmp(bucket->symbole->name, symbole->name) == 0) {
-            return -1;
+            return -1; // name déjà présent 
         }
         bucket_prec = bucket;
         bucket = bucket->next;
@@ -100,6 +103,16 @@ Symbole * HashTable_get(HashTable * hashtable, const char * name) {
         bucket = bucket->next;
     }
     return NULL;
+}
+
+void HashTable_dump(HashTable * hashtable) {
+    for (size_t i = 0; i < hashtable->size; i++) {
+        HashTableBucket *bucket = hashtable->buckets[i].next;
+        while (bucket != NULL) {
+            printf("%s\n", bucket->symbole->name);
+            bucket = bucket->next;
+        }
+    }
 }
 
 
@@ -126,6 +139,7 @@ SymboleTableRoot * SymboleTableRoot_new() {
     CHECKMALLOC(root);
 
     root->next = SymboleTable_new();
+    root->temporary = 0;
 
     return root;
 }
@@ -136,6 +150,15 @@ void SymboleTableRoot_free(SymboleTableRoot * root) {
         symtable = SymboleTable_free(symtable);
     }
     free(root);
+}
+
+void SymboleTableRoot_dump(SymboleTableRoot * root) {
+    SymboleTable * symtable = root->next;
+    while (symtable != NULL) {
+        HashTable_dump(symtable->table);
+        printf("\n");
+        symtable = symtable->next;
+    }
 }
 
 void pushctx(SymboleTableRoot * root) {
@@ -152,7 +175,7 @@ void popctx(SymboleTableRoot * root) {
 
 Symbole * lookup(SymboleTableRoot * root, const char * name ) {
     SymboleTable * symtable = root->next;
-    while (symtable == NULL) {
+    while (symtable != NULL) {
         Symbole * symbole = HashTable_get(symtable->table, name);
         if (symbole != NULL) {
             return symbole;
@@ -162,11 +185,15 @@ Symbole * lookup(SymboleTableRoot * root, const char * name ) {
     return NULL;
 }
 
-int newname(SymboleTableRoot * root, const char * name) {
+Symbole * newname(SymboleTableRoot * root, const char * name) {
     Symbole * symbole = Symbole_new(name);
     int res = HashTable_insert(root->next->table, symbole);
-    Symbole_free(symbole);
-    return res;
+    if (res == -1) { // name déjà présent
+        fprintf(stderr, "newname failed : \"%s\" already taken\n", name);
+        Symbole_free(symbole);
+        exit(1);
+    }
+    return symbole;
 }
 
 
@@ -191,6 +218,18 @@ Symbole * newconst(SymboleTableRoot * root, const char * name) {
     return symbole;
 }
 
+Symbole * newtemp (SymboleTableRoot * root) {
+    char name[25];
+    int res = snprintf(name, 25, "-T%lu", root->temporary);
+    if (res < 0 || res >= 25) {
+        perror("newtemp snprintf");
+        exit(1);
+    }
+    (root->temporary)++;
+    return newname(root, name);
+}
+
+
 
 Symbole * Symbole_new(const char * name) {
     Symbole * symbole = malloc(sizeof(Symbole));
@@ -209,4 +248,68 @@ Symbole * Symbole_new(const char * name) {
 void Symbole_free(Symbole * symbole){
     free(symbole->name);
     free(symbole);
+}
+
+
+struct Code * Code_new() {
+    Code * code = malloc(sizeof(Code));
+    CHECKMALLOC(code);
+    code->capacity = 1024;
+    code->quads = malloc(code->capacity * sizeof(Quad));
+    CHECKMALLOC(code->quads);
+    code->nextquad = 0;
+}
+
+void Code_free(Code * code) {
+    free(code->quads);
+    free(code);
+}
+
+
+void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole * s3) {
+    if (code->nextquad == code->capacity) {
+        code->capacity += 1024;
+        code->quads = realloc(code->quads, code->capacity * sizeof(Quad));
+        if(code->quads == NULL) {
+            fprintf(stderr, "Error attempting to grow quad list (actual size is %d)\n",code->nextquad);
+            exit(1);
+        }
+    }
+
+    Quad * q = &(code->quads[code->nextquad]);
+    q->kind = k;
+    q->sym1 = s1;
+    q->sym2 = s2;
+    q->sym3 = s3;
+    (code->nextquad)++;
+}
+
+
+struct ListNames * ListNames_new() {
+    struct ListNames * l = malloc(sizeof(struct ListNames));
+    CHECKMALLOC(l);
+    l->count = 0;
+    l->size = 8;
+    l->names = malloc(l->size * sizeof(struct ListNames*));
+    CHECKMALLOC(l->names);
+}
+
+void ListNames_free(struct ListNames * l){
+    for(size_t i = 0; i < l->count; i++) {
+        free(l->names[i]);
+    }
+    free(l->names);
+    free(l);
+}
+
+void ListNames_add(struct ListNames * l, const char *name) {
+    if (l->count == l->size) {
+        l->size *= 2;
+        l->names = realloc(l->names, l->size);
+        CHECKMALLOC(l->names);
+    }
+
+    l->names[l->count] = strndup(name, strlen(name));
+    CHECKMALLOC(l->names[l->count]);
+    (l->count)++;
 }

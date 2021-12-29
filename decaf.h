@@ -4,5 +4,6 @@
 #include "lib.h"
 
 extern SymboleTableRoot * SYMTABLE;
+extern Code * CODE;
 
 #endif
