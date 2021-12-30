@@ -7,3 +7,4 @@ decaf.output
 lex.*
 lib.o
 tests
+decaf.mips

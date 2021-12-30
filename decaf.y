@@ -93,12 +93,34 @@ program
 field_method 
 : field_decl field_method
 
-| VOID ID '(' method_arg_opt ')' block list_method_decl
+| VOID ID '(' method_arg_opt ')'
+{
+    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+}
+block 
+{
+    gencode(CODE, OP_DFC, NULL, NULL, NULL);
+}
+list_method_decl
 
-| type ID '(' method_arg_opt ')' block list_method_decl
+| type ID '(' method_arg_opt ')' 
+{
+    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+}
+block 
+{
+    gencode(CODE, OP_DFC, NULL, NULL, NULL);
+}
+list_method_decl
 
-| VOID MAIN '(' ')' block
-;
+| VOID MAIN '(' ')' 
+{
+    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+}
+block 
+{
+    gencode(CODE, OP_DFC, NULL, NULL, NULL);
+};
 
 
 
@@ -129,14 +151,28 @@ field
 list_method_decl 
 : method_decl list_method_decl
 
-| VOID MAIN '(' ')' block 
+| VOID MAIN '(' ')' 
+{
+    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+}
+block 
+{
+    gencode(CODE, OP_DFC, NULL, NULL, NULL);
+}
 ;
 
 
 
 
 method_decl 
-: method_type ID '(' method_arg_opt ')' block
+: method_type ID '(' method_arg_opt ')' 
+{
+    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+}
+block 
+{
+    gencode(CODE, OP_DFC, NULL, NULL, NULL);
+}
 ;
 
 
@@ -206,6 +242,7 @@ var_decl
         } else if ($1 == BOOLEAN) {
             sym->type = T_BOOL;
         }
+        gencode(CODE, OP_LV, sym, NULL, NULL);
     }
     ListSymboles_free($3);
 }
@@ -420,6 +457,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_ADD, sym, $1.ptr, $3.ptr);
@@ -434,6 +472,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_SUB, sym, $1.ptr, $3.ptr);
@@ -447,6 +486,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_MUL, sym, $1.ptr, $3.ptr);
@@ -460,6 +500,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_DIV, sym, $1.ptr, $3.ptr);
@@ -473,6 +514,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_MOD, sym, $1.ptr, $3.ptr);
@@ -486,6 +528,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_LT, sym, $1.ptr, $3.ptr);
@@ -499,6 +542,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_GT, sym, $1.ptr, $3.ptr);
@@ -512,6 +556,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_LE, sym, $1.ptr, $3.ptr);
@@ -525,6 +570,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_GE, sym, $1.ptr, $3.ptr);
@@ -541,6 +587,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_EQ, sym, $1.ptr, $3.ptr);
@@ -557,6 +604,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_NE, sym, $1.ptr, $3.ptr);
@@ -570,6 +618,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_AND, sym, $1.ptr, $3.ptr);
@@ -583,6 +632,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_OR, sym, $1.ptr, $3.ptr);
@@ -596,6 +646,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_BOOL;
     sym->kind = K_VAR;
     gencode(CODE, OP_NOT, sym, $2.ptr, NULL);
@@ -609,6 +660,7 @@ expr
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     sym->type = T_INT;
     sym->kind = K_VAR;
     gencode(CODE, OP_UMOINS, sym, $2.ptr, NULL);

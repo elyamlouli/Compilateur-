@@ -292,8 +292,9 @@ struct ListSymboles * ListSymboles_new() {
     CHECKMALLOC(l);
     l->count = 0;
     l->size = 8;
-    l->symboles = malloc(l->size * sizeof(struct ListSymboles *));
+    l->symboles = malloc(l->size * sizeof(Symbole *));
     CHECKMALLOC(l->symboles);
+    return l;
 }
 
 void ListSymboles_free(struct ListSymboles * l) {
@@ -304,10 +305,160 @@ void ListSymboles_free(struct ListSymboles * l) {
 void ListSymboles_add(struct ListSymboles * l, Symbole * symbole) {
     if (l->count == l->size) {
         l->size *= 2;
-        l->symboles = realloc(l->symboles, l->size);
+        l->symboles = realloc(l->symboles, l->size * sizeof(Symbole *));
         CHECKMALLOC(l->symboles);
     }
 
     l->symboles[l->count] = symbole;
     (l->count)++;
 }
+
+
+FunctionsContexts * FunctionsContexts_new() {
+    FunctionsContexts *ctx = malloc(sizeof(FunctionsContexts));
+    CHECKMALLOC(ctx);
+    ctx->count = 0;
+    ctx->size = 8;
+    ctx->lists_sym = malloc(ctx->size * sizeof(struct ListSymboles *));
+    CHECKMALLOC(ctx->lists_sym);
+    return ctx;
+}
+
+void FunctionsContexts_free(FunctionsContexts * ctx) {
+    for( size_t i = 0; i < ctx->count; i++){
+        ListSymboles_free(ctx->lists_sym[i]);
+    }
+    free(ctx);
+}
+
+void FunctionsContexts_push(FunctionsContexts * ctx) {
+    if (ctx->count == ctx->size) {
+        ctx->size *= 2;
+        ctx->lists_sym = realloc(ctx->lists_sym, ctx->size * sizeof(struct ListSymboles *));
+        CHECKMALLOC(ctx->lists_sym);
+    }
+
+    ctx->lists_sym[ctx->count] = ListSymboles_new();
+    (ctx->count)++;
+}
+
+void FunctionsContexts_pop(FunctionsContexts * ctx) {
+    if (ctx->count > 0) {
+        ListSymboles_free(ctx->lists_sym[ctx->count - 1]);
+        (ctx->count)--;
+    } else {
+        fprintf(stderr, "error: FunctionsContexts_pop\n");
+        exit(1);
+    }
+}
+
+void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
+    if (ctx->count > 0) {
+        struct ListSymboles * list_sym = ctx->lists_sym[ctx->count-1];
+        for (size_t j = 0; j < list_sym->count; j++) {
+            Symbole * sym = list_sym->symboles[j];
+            sym->offset += 4;
+        }
+        sym->offset = 0;
+        ListSymboles_add(list_sym, sym);
+    } else {
+        fprintf(stderr, "error: FunctionsContexts_new_var\n");
+        exit(1);
+    }
+}
+
+void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx) {
+    for (size_t i = 0; i < code->nextquad; i++) {
+        Quad * quad = &(code->quads[i]);
+        switch (quad->kind)
+        {
+        case OP_NFC: // new fonction context
+            FunctionsContexts_push(ctx);
+            break;
+
+        case OP_DFC: // delete fonction context 
+            fprintf(file, "\taddiu $sp, $sp, %lu\n", (ctx->lists_sym[ctx->count - 1])->count * 4);
+            fprintf(file, "\tjr $ra\n"); // A CHANGER !! 
+            FunctionsContexts_pop(ctx);
+            break;
+
+        case OP_GV: // global variable
+            break;
+
+        case OP_LV: // local variable
+        {
+            FunctionsContexts_new_var(ctx, quad->sym1);
+            fprintf(file, "\taddi $sp, $sp, -4\n");
+        }
+            break;
+
+        case OP_GE:
+            break;
+
+        case OP_LE:
+            break;
+
+        case OP_NE:
+            break;
+        
+        case OP_GT:
+            break;
+        
+        case OP_LT:
+            break;
+        
+        case OP_ADD:
+            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
+            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
+            fprintf(file, "\taddu $t1, $t2, $t3\n");
+            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
+            break;
+        
+        case OP_SUB:
+            break;
+        
+        case OP_MUL:
+            break;
+        
+        case OP_DIV:
+            break;
+        
+        case OP_MOD:
+            break;
+        
+        case OP_INCR:
+            break;
+
+        case OP_DECR:
+            break;
+        
+        case OP_EQ:
+            break;
+        
+        case OP_AND:
+            break;
+        
+        case OP_OR:
+            break;
+        
+        case OP_NOT:
+            break;
+        
+        case OP_UMOINS:
+            break;
+        
+        case OP_WS:
+            break;
+            
+        default:
+            break;
+        }
+    }
+}
+
+// OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
+// OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,
+// OP_INCR, OP_DECR, OP_EQ,
+// OP_AND, OP_OR, OP_NOT,
+// OP_UMOINS,
+// OP_WS,

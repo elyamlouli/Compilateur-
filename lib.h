@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct HashTable HashTable;
 typedef struct HashTableBucketRoot HashTableBucketRoot;
@@ -13,6 +14,7 @@ typedef struct Symbole Symbole;
 
 typedef struct Code Code;
 typedef struct Quad Quad;
+typedef struct FunctionsContexts FunctionsContexts;
 
 
 /* Section pour la HashTable */
@@ -99,7 +101,7 @@ struct Symbole {
         char * string_lit;  // pour les constantes string
         char char_lit;    // pour les constantes char
     } value;
-    uint32_t ptr; // adresse dans le code mips
+    uint32_t offset; // adresse dans le code mips
 };
 
 Symbole * Symbole_new(const char * name);
@@ -111,8 +113,9 @@ void Symbole_free(Symbole * symbole);
 
 struct Quad {
   enum quad_kind { 
+    OP_LV, OP_GV, OP_NFC, OP_DFC,
     OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
-    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
+    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,
     OP_INCR, OP_DECR, OP_EQ,
     OP_AND, OP_OR, OP_NOT,
     OP_UMOINS,
@@ -147,5 +150,24 @@ struct ListSymboles * ListSymboles_new();
 void ListSymboles_free(struct ListSymboles * l);
 
 void ListSymboles_add(struct ListSymboles * l, struct Symbole * symbole);
+
+
+struct FunctionsContexts {
+    size_t size;
+    size_t count;
+    struct ListSymboles ** lists_sym;
+};
+
+FunctionsContexts * FunctionsContexts_new();
+
+void FunctionsContexts_free(struct FunctionsContexts * ctx);
+
+void FunctionsContexts_push(struct FunctionsContexts * ctx);
+
+void FunctionsContexts_pop(struct FunctionsContexts * ctx);
+
+void FunctionsContexts_new_var(struct FunctionsContexts * ctx, Symbole * sym);
+
+void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx);
 
 #endif
