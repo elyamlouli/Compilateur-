@@ -133,17 +133,16 @@ void Code_free(Code * code);
 void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole * s3);
 
 
-
-struct ListNames {
+struct ListSymboles {
     size_t size;
     size_t count;
-    char ** names;
+    Symbole ** symboles;
 };
 
-struct ListNames * ListNames_new();
+struct ListSymboles * ListSymboles_new();
 
-void ListNames_free(struct ListNames * l);
+void ListSymboles_free(struct ListSymboles * l);
 
-void ListNames_add(struct ListNames * l, const char * name);
+void ListSymboles_add(struct ListSymboles * l, struct Symbole * symbole);
 
 #endif

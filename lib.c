@@ -245,7 +245,7 @@ Symbole * Symbole_new(const char * name) {
     return symbole;
 }
 
-void Symbole_free(Symbole * symbole){
+void Symbole_free(Symbole * symbole) {
     free(symbole->name);
     free(symbole);
 }
@@ -285,31 +285,28 @@ void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole 
 }
 
 
-struct ListNames * ListNames_new() {
-    struct ListNames * l = malloc(sizeof(struct ListNames));
+
+struct ListSymboles * ListSymboles_new() {
+    struct ListSymboles * l = malloc(sizeof(struct ListSymboles));
     CHECKMALLOC(l);
     l->count = 0;
     l->size = 8;
-    l->names = malloc(l->size * sizeof(struct ListNames*));
-    CHECKMALLOC(l->names);
+    l->symboles = malloc(l->size * sizeof(struct ListSymboles *));
+    CHECKMALLOC(l->symboles);
 }
 
-void ListNames_free(struct ListNames * l){
-    for(size_t i = 0; i < l->count; i++) {
-        free(l->names[i]);
-    }
-    free(l->names);
+void ListSymboles_free(struct ListSymboles * l) {
+    free(l->symboles);
     free(l);
 }
 
-void ListNames_add(struct ListNames * l, const char *name) {
+void ListSymboles_add(struct ListSymboles * l, Symbole * symbole) {
     if (l->count == l->size) {
         l->size *= 2;
-        l->names = realloc(l->names, l->size);
-        CHECKMALLOC(l->names);
+        l->symboles = realloc(l->symboles, l->size);
+        CHECKMALLOC(l->symboles);
     }
 
-    l->names[l->count] = strndup(name, strlen(name));
-    CHECKMALLOC(l->names[l->count]);
+    l->symboles[l->count] = symbole;
     (l->count)++;
 }

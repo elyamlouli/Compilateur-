@@ -18,7 +18,7 @@ typedef struct Symbole Symbole;
         struct Symbole * ptr;
     } exprval;
     int type;
-    struct ListNames * list_names;
+    struct ListSymboles * list_sym;
 }
 
 // %token COMMENT
@@ -65,7 +65,7 @@ typedef struct Symbole Symbole;
 %type <exprval> method_name
 %type <exprval> var_decl
 
-%type <list_names> list_id
+%type <list_sym> list_id
 
 
 %type <type> type
@@ -112,7 +112,6 @@ field_decl
 
 list_field 
 : ',' field list_field
-           
 |
 ;
 
@@ -196,18 +195,18 @@ list_var_decl
 var_decl 
 : type ID list_id ';'
 {
-    ListNames_add($3, $2);
+    Symbole * sym = newname(SYMTABLE, $2);
+    ListSymboles_add($3, sym);
 
     for (size_t i = 0; i < $3->count; i++) {
-        char * name = $3->names[i];
-        Symbole * sym = newname(SYMTABLE, name);
+        sym = ($3->symboles)[i];
         if ($1 == INT) {
             sym->type = VAR_INT;
         } else if ($1 == BOOLEAN) {
             sym->type = VAR_BOOL;
         }
     }
-    ListNames_free($3);
+    ListSymboles_free($3);
 }
 ;
 
@@ -217,14 +216,15 @@ var_decl
 list_id 
 : ',' ID list_id
 {
-    ListNames_add($3, $2);
+    Symbole * sym = newname(SYMTABLE, $2);
+    ListSymboles_add($3, sym);
     $$ = $3;
 }
 
 |
 {
-    struct ListNames * list_names = ListNames_new();
-    $$ = list_names;    
+    struct ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym;    
 }
 ;
 
