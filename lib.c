@@ -241,7 +241,8 @@ Symbole * Symbole_new(const char * name) {
     
     // on différencie selon le type 
     symbole->value.string_lit = NULL;
-    symbole->type = 0;
+    symbole->type = T_NONE;
+    symbole->kind = K_NONE;
     return symbole;
 }
 

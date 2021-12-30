@@ -196,14 +196,15 @@ var_decl
 : type ID list_id ';'
 {
     Symbole * sym = newname(SYMTABLE, $2);
+    sym->kind = K_VAR;
     ListSymboles_add($3, sym);
 
     for (size_t i = 0; i < $3->count; i++) {
         sym = ($3->symboles)[i];
         if ($1 == INT) {
-            sym->type = VAR_INT;
+            sym->type = T_INT;
         } else if ($1 == BOOLEAN) {
-            sym->type = VAR_BOOL;
+            sym->type = T_BOOL;
         }
     }
     ListSymboles_free($3);
@@ -217,6 +218,7 @@ list_id
 : ',' ID list_id
 {
     Symbole * sym = newname(SYMTABLE, $2);
+    sym->kind = K_VAR;
     ListSymboles_add($3, sym);
     $$ = $3;
 }
@@ -260,8 +262,8 @@ statement
 {
     if ($2 == '=') {
         if (!(
-               ((($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT) && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT)) 
-            || ((($1.ptr)->type == CONST_BOOL || ($1.ptr)->type == VAR_BOOL) && (($3.ptr)->type == CONST_BOOL || ($3.ptr)->type == VAR_BOOL)) 
+               (($1.ptr)->type == T_INT && ($3.ptr)->type == T_INT) 
+            || (($1.ptr)->type == T_BOOL && ($3.ptr)->type == T_BOOL) 
         )) {
             fprintf(stderr, "type not INT or BOOL for \'=\' \n");
             exit(1);
@@ -269,8 +271,7 @@ statement
         gencode(CODE, OP_EQ, $1.ptr, $3.ptr, NULL);
 
     }  else {
-        if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-            && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+        if (!( ($1.ptr)->type == T_INT && ($3.ptr)->type == T_INT )) {
             fprintf(stderr, "type not INT for INCR or DECR \n");
             exit(1);
         };
@@ -344,10 +345,12 @@ method_call
 
 | WS '(' STRING_LIT ')'
 {
-    Symbole * sym_str = newconst(SYMTABLE, $3);
-    sym_str->type = CONST_STRING;
-    sym_str->value.string_lit = sym_str->name;
+    Symbole * sym = newconst(SYMTABLE, $3);
+    sym->type = T_STRING;
+    sym->kind = K_CONST;
+    sym->value.string_lit = sym->name;
     free($3);
+    gencode(CODE, OP_WS, sym, NULL, NULL);
 }
 ;
 
@@ -412,13 +415,13 @@ expr
 
 | expr '+' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "ADD type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_ADD, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
     SymboleTableRoot_dump(SYMTABLE);
@@ -426,104 +429,104 @@ expr
 
 | expr '-' expr 
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "SUB type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_SUB, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr '*' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "MUL type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_MUL, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr '/' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "DIV type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_DIV, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr '%' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "MOD type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_MOD, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr '<' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "LT type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_LT, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr '>' expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "GT type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_GT, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr LE expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "LE type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_LE, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr GE expr
 {
-    if (!(  (($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT)
-        && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT))) {
+    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
         fprintf(stderr, "GE type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_GE, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
@@ -531,14 +534,15 @@ expr
 | expr EQ expr
 {
     if (!(
-           ((($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT) && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT)) 
-        || ((($1.ptr)->type == CONST_BOOL || ($1.ptr)->type == VAR_BOOL) && (($3.ptr)->type == CONST_BOOL || ($3.ptr)->type == VAR_BOOL)) 
+           ( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT ) 
+        || ( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL ) 
        )) {
         fprintf(stderr, "EQ type not INT or BOOL\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_EQ, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
@@ -546,66 +550,67 @@ expr
 | expr NE expr
 {
     if (!(
-           ((($1.ptr)->type == CONST_INT || ($1.ptr)->type == VAR_INT) && (($3.ptr)->type == CONST_INT || ($3.ptr)->type == VAR_INT)) 
-        || ((($1.ptr)->type == CONST_BOOL || ($1.ptr)->type == VAR_BOOL) && (($3.ptr)->type == CONST_BOOL || ($3.ptr)->type == VAR_BOOL)) 
+           ( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT ) 
+        || ( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )
        )) {
         fprintf(stderr, "NE type not INT or BOOL\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_NE, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr AND expr
 {
-    if (!(  (($1.ptr)->type == CONST_BOOL || ($1.ptr)->type == VAR_BOOL)
-        && (($3.ptr)->type == CONST_BOOL || ($3.ptr)->type == VAR_BOOL))) {
+    if (!( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )) {
         fprintf(stderr, "AND type not BOOL\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_AND, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | expr OR expr
 {
-    if (!(  (($1.ptr)->type == CONST_BOOL || ($1.ptr)->type == VAR_BOOL)
-        && (($3.ptr)->type == CONST_BOOL || ($3.ptr)->type == VAR_BOOL))) {
+    if (!( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )) {
         fprintf(stderr, "OR type not BOOL\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_OR, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
 }
 
 | '!' expr
 {
-    if (!(  ($2.ptr)->type == CONST_BOOL || ($2.ptr)->type == VAR_BOOL)
-        ) {
+    if (!( ($2.ptr)->type == T_BOOL )) {
         fprintf(stderr, "NOT type not BOOL\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_VAR;
     gencode(CODE, OP_NOT, sym, $2.ptr, NULL);
     $$.ptr = sym;
 }
 
 | '-' expr 
 {
-	if (!(  ($2.ptr)->type == CONST_INT || ($2.ptr)->type == VAR_INT)
-        ) {
+	if (!( ($2.ptr)->type == T_INT )) {
         fprintf(stderr, "UMOINS type not INT\n");
         exit(1);
     };
     Symbole * sym = newtemp(SYMTABLE);
-    sym->type = VAR_INT;
+    sym->type = T_INT;
+    sym->kind = K_VAR;
     gencode(CODE, OP_UMOINS, sym, $2.ptr, NULL);
 } %prec UMOINS
 
@@ -627,7 +632,8 @@ literal : INT_LIT
         exit(1);
     }
     Symbole * sym = newconst(SYMTABLE, name);
-    sym->type = CONST_INT;
+    sym->type = T_INT;
+    sym->kind = K_CONST;
     sym->value.int_lit = $1;
     $$.ptr = sym;
 }
@@ -641,7 +647,8 @@ literal : INT_LIT
         exit(1);
     }
     Symbole * sym = newconst(SYMTABLE, name);
-    sym->type = CONST_CHAR;
+    sym->type = T_CHAR;
+    sym->kind = K_CONST;
     sym->value.char_lit = $1;
     $$.ptr = sym;
 }
@@ -655,7 +662,8 @@ literal : INT_LIT
         exit(1);
     }
     Symbole * sym = newconst(SYMTABLE, name);
-    sym->type = CONST_BOOL;
+    sym->type = T_BOOL;
+    sym->kind = K_CONST;
     sym->value.bool_lit = $1;
     $$.ptr = sym;
 }

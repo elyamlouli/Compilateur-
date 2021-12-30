@@ -88,7 +88,9 @@ Symbole * newtemp (SymboleTableRoot * root);
 
 
 struct Symbole {
-    enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB } type;
+    // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
+    enum sym_type { T_NONE, T_INT, T_BOOL, T_STRING, T_CHAR, T_VOID } type;
+    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_ENTRY } kind;
     char * name;
     union {
         // un truc pour les fonctions
@@ -114,6 +116,7 @@ struct Quad {
     OP_INCR, OP_DECR, OP_EQ,
     OP_AND, OP_OR, OP_NOT,
     OP_UMOINS,
+    OP_WS,
     } kind;
   Symbole * sym1;
   Symbole * sym2;
