@@ -11,6 +11,7 @@ typedef struct HashTableBucket HashTableBucket;
 typedef struct SymboleTableRoot SymboleTableRoot;
 typedef struct SymboleTable SymboleTable;
 typedef struct Symbole Symbole;
+typedef struct ListSymboles ListSymboles;
 
 typedef struct Code Code;
 typedef struct Quad Quad;
@@ -35,8 +36,8 @@ HashTableBucket * HashTableBucket_free(HashTableBucket *bucket);
 void HashTable_dump(HashTable * hashtable);
 
 struct HashTable {
-    size_t size;
-    size_t count;
+    size_t size;    // le nombre de buckets
+    size_t count;   // nombre total d'éléments
     HashTableBucketRoot * buckets;
 } ;
 
@@ -92,16 +93,21 @@ Symbole * newtemp (SymboleTableRoot * root);
 struct Symbole {
     // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
     enum sym_type { T_NONE, T_INT, T_BOOL, T_STRING, T_CHAR, T_VOID } type;
-    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_ENTRY } kind;
+    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_IDX, K_GLOB, K_FCT, K_ARG } kind;
     char * name;
     union {
         // un truc pour les fonctions
         int32_t int_lit;    // pour les constantes entiere
         int8_t bool_lit;    // pour les constantes boolenne
         char * string_lit;  // pour les constantes string
-        char char_lit;    // pour les constantes char
-    } value;
+        char char_lit;      // pour les constantes char
+        int tab_size;       // taille du tableau
+        Symbole * tab;      // référence au tableau
+        ListSymboles *args; // arguments 
+    } value;        
     uint32_t offset; // adresse dans le code mips
+                    // offset par rapport au SP pour les variables locales
+                    // offset par rapport à la déclaration? des variables globales 
 };
 
 Symbole * Symbole_new(const char * name);
@@ -119,7 +125,7 @@ struct Quad {
     OP_INCR, OP_DECR, OP_EQ,
     OP_AND, OP_OR, OP_NOT,
     OP_UMOINS,
-    OP_WS,
+    OP_CALL, OP_WS,
     } kind;
   Symbole * sym1;
   Symbole * sym2;
@@ -168,6 +174,10 @@ void FunctionsContexts_pop(struct FunctionsContexts * ctx);
 
 void FunctionsContexts_new_var(struct FunctionsContexts * ctx, Symbole * sym);
 
-void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx);
+void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx);
+
+void genMIPS_data(FILE *file, SymboleTableRoot * root, size_t gv_count);
+
+
 
 #endif

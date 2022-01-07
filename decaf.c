@@ -21,7 +21,7 @@ int main(void) {
     // FILE * file = stdout;
 
     int res = yyparse();
-    genMIPS(file, CODE, FUN_CTX);
+    genMIPS(file, CODE, SYMTABLE, FUN_CTX);
     fflush(file);
     if (fclose(file) == EOF) {
         perror("fclose");

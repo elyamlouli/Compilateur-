@@ -62,10 +62,15 @@ typedef struct Symbole Symbole;
 %type <exprval> expr
 %type <exprval> location
 %type <exprval> method_call
-%type <exprval> method_name
 %type <exprval> var_decl
+%type <exprval> field
+%type <exprval> method_arg
+
 
 %type <list_sym> list_id
+%type <list_sym> list_field
+%type <list_sym> list_method_arg
+%type <list_sym> method_arg_opt
 
 
 %type <type> type
@@ -95,7 +100,14 @@ field_method
 
 | VOID ID '(' method_arg_opt ')'
 {
-    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+    Symbole * sym = newname(SYMTABLE, $2);
+    sym->type = T_VOID;
+    sym->kind = K_FCT;
+    sym->value.args = $4;
+
+    free($2);
+    
+    gencode(CODE, OP_NFC, sym, NULL, NULL);
 }
 block 
 {
@@ -127,6 +139,22 @@ block
 
 field_decl 
 : type field list_field ';'
+{
+    ListSymboles_add($3, $2.ptr);
+
+    for (size_t i = 0; i < $3->count; i++) {
+        Symbole * sym = ($3->symboles)[i];
+        if ($1 == INT) {
+            sym->type = T_INT;
+        } else if ($1 == BOOLEAN) {
+            sym->type = T_BOOL;
+        }
+        if (sym->kind == K_GLOB) {
+            gencode(CODE, OP_GV, sym, NULL, NULL);
+        }
+    }
+    ListSymboles_free($3);  
+}
 ;
 
 
@@ -134,15 +162,35 @@ field_decl
 
 list_field 
 : ',' field list_field
+{
+    ListSymboles_add($3, $2.ptr);
+    $$ = $3;   
+}
+
 |
+{
+    struct ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym; 
+}
 ;
 
 
   
 field 
 : ID 
+{
+    Symbole * sym = newname(SYMTABLE, $1);
+    sym->kind = K_GLOB;
+    $$.ptr = sym;
+}
 
-| ID '[' INT_LIT ']'
+| ID '[' INT_LIT ']' 
+{
+    Symbole * sym = newname(SYMTABLE, $1);
+    sym->kind = K_TAB;
+    sym->value.tab_size = $3;
+    $$.ptr = sym;
+}
 ;
 
 
@@ -189,8 +237,16 @@ method_type
 
 method_arg_opt 
 : method_arg list_method_arg
+{
+    ListSymboles_add($2, $1.ptr);
+    $$ = $2;
+}
 
 |
+{
+    struct ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym; 
+}
 ;
 
 
@@ -198,8 +254,16 @@ method_arg_opt
 
 list_method_arg 
 : ',' method_arg list_method_arg
+{
+    ListSymboles_add($3, $2.ptr);
+    $$ = $3;
+}
 
 |
+{
+    struct ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym;  
+}
 ;
 
 
@@ -207,21 +271,39 @@ list_method_arg
 
 method_arg 
 : type ID
+{
+    Symbole * sym = newtemp(SYMTABLE);
+    if ($1 == INT) {
+        sym->type = T_INT;
+    } else if ($1 == BOOLEAN) {
+        sym->type = T_BOOL;
+    }
+    $$.ptr = sym;
+}
 ;
 
 
 
 
 block 
-: '{' list_var_decl list_statement '}'
+: '{'
+{
+
+}
+
+list_var_decl list_statement 
+{
+
+}
+'}'
 ;
 
 
 
 
+ // pas de code car variable gérée dans var_decl
 list_var_decl 
 : var_decl list_var_decl
-
 |
 ;
 
@@ -378,7 +460,25 @@ assign_op
 
 
 method_call 
-: method_name '(' method_call_expr_opt ')'
+: ID '(' method_call_expr_opt ')'
+{
+    Symbole * sym_fct = lookup(SYMTABLE, $1);
+    if (sym_fct == NULL) {
+        fprintf(stderr, "ID \"%s\" is not declared\n", $1);
+        exit(1);
+    }
+    if (sym_fct->kind != K_FCT) {
+        fprintf(stderr, "ID \"%s\" is not a function\n", $1);
+        exit(1);
+    }
+    free($1);
+
+    Symbole * sym = newtemp(SYMTABLE);
+    sym->type = sym_fct->type;
+    sym->kind = K_VAR;
+    gencode(CODE, OP_CALL, sym, NULL, NULL);
+    $$.ptr = sym;
+}
 
 | WS '(' STRING_LIT ')'
 {
@@ -389,13 +489,6 @@ method_call
     free($3);
     gencode(CODE, OP_WS, sym, NULL, NULL);
 }
-;
-
-
-
-
-method_name 
-: ID
 ;
 
 
@@ -432,6 +525,28 @@ location
 }
 
 | ID '[' expr ']'
+{
+    Symbole * sym = lookup(SYMTABLE, $1);
+    if (sym == NULL) {
+        fprintf(stderr, "ID \"%s\" is not declared\n", $1);
+        exit(1);
+    }
+    if (sym->kind != K_TAB) {
+        fprintf(stderr, "ID \"%s\" is not an array\n", $1);
+        exit(1);
+    }
+    free($1);
+    if ($3.ptr->type != T_INT) {
+        fprintf(stderr, "not type int to access array \"%s\"\n", $1);
+        exit(1);
+    }
+
+    Symbole * entry_tab = newtemp(SYMTABLE);
+    entry_tab->kind = K_TAB_IDX;
+    entry_tab->type = sym->type;
+    entry_tab->value.tab = sym;
+    $$.ptr = entry_tab;
+}
 ;
 
 

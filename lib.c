@@ -367,7 +367,11 @@ void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
     }
 }
 
-void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx) {
+void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx) {
+    size_t gv_count = 0;
+
+    fprintf(file, ".text\n");
+
     for (size_t i = 0; i < code->nextquad; i++) {
         Quad * quad = &(code->quads[i]);
         switch (quad->kind)
@@ -383,6 +387,10 @@ void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx) {
             break;
 
         case OP_GV: // global variable
+        {
+            quad->sym1->offset = gv_count;
+            gv_count++;
+        }
             break;
 
         case OP_LV: // local variable
@@ -447,6 +455,12 @@ void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx) {
         case OP_UMOINS:
             break;
         
+        case OP_CALL:
+        {
+            
+        }
+            break;
+        
         case OP_WS:
             break;
             
@@ -454,7 +468,43 @@ void genMIPS(FILE * file, Code * code, FunctionsContexts * ctx) {
             break;
         }
     }
+
+    genMIPS_data(file, symtable, gv_count);
 }
+
+void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_count) {
+    fprintf(file, ".data\n");
+    fprintf(file, "\t_GV: .space %lu\n", 4 * gv_count);
+
+
+    SymboleTable * symtable = root->next;
+    if (symtable == NULL) {
+        fprintf(stderr, "Error : global variable symtable does not exist. Error in the algorithm\n");
+        exit(1);
+    }
+    while (symtable->next != NULL) {
+        symtable = symtable->next;
+    }
+
+    size_t str_count = 0;
+    HashTable *hash = symtable->table;
+    for (size_t i = 0; i < hash->size; i++) {
+        HashTableBucket * bucket = hash->buckets[i].next;
+        while (bucket != NULL) {
+            Symbole * sym = bucket->symbole;
+            if (sym->kind == K_TAB) {
+                fprintf(file, "\t%s: .space %lu\n", sym->name, 4 * sym->value.tab_size);
+            } else if (sym->kind == K_CONST && sym->type == T_STRING) {
+                fprintf(file, "\t_STR%lu: .asciiz %s\n", str_count, sym->name);
+                str_count++;
+            }
+            bucket = bucket->next;
+        }
+    }
+
+    
+}
+
 
 // OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
 // OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,

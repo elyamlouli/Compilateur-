@@ -4,6 +4,13 @@ moins prioritaire :
   - overflow dans MIPS ?
   - meilleur affichage erreur
 
+reste a faire :
+  - variable globale
+  - affectation
+  - fonction declaration et appel (aussi recursif), enrengistrer registre
+  - branchement / boucle (label ? ardress relatif ?)
+
+
 class Test {
     void main () {
         int a, b, c;
@@ -40,4 +47,13 @@ class IfSansElse {
         if (1 == 1) {}
     }
 
+}
+
+class GV {
+    int a;
+    boolean b;
+    int c [10];
+    void main() {
+        WriteString("string1");
+    }
 }
