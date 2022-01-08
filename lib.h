@@ -15,6 +15,7 @@ typedef struct ListSymboles ListSymboles;
 
 typedef struct Code Code;
 typedef struct Quad Quad;
+typedef struct Context Context;
 typedef struct FunctionsContexts FunctionsContexts;
 
 
@@ -103,7 +104,7 @@ struct Symbole {
         char * string_lit;  // pour les constantes string
         char char_lit;      // pour les constantes char
         int tab_size;       // taille du tableau
-        Symbole * tab;      // référence au tableau
+        Symbole * tab[2];   // référence au tableau + référence indice
         ListSymboles *args; // arguments 
     } value;        
     uint32_t offset; // adresse dans le code mips
@@ -127,6 +128,7 @@ struct Quad {
     OP_AND, OP_OR, OP_NOT,
     OP_UMOINS,
     OP_CALL, OP_WS,
+    OP_PUSH,
     } kind;
   Symbole * sym1;
   Symbole * sym2;
@@ -158,12 +160,18 @@ void ListSymboles_free(struct ListSymboles * l);
 
 void ListSymboles_add(struct ListSymboles * l, struct Symbole * symbole);
 
+struct Context {
+    ListSymboles * list_sym;
+    Symbole * ret;
+};
+
 
 struct FunctionsContexts {
     size_t size;
     size_t count;
-    struct ListSymboles ** lists_sym;
+    Context * list_ctx; // une liste de contexts
 };
+
 
 FunctionsContexts * FunctionsContexts_new();
 
@@ -177,7 +185,9 @@ void FunctionsContexts_new_var(struct FunctionsContexts * ctx, Symbole * sym);
 
 void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx);
 
-void genMIPS_data(FILE *file, SymboleTableRoot * root, size_t gv_count);
+void genMIPS_data(FILE *file, SymboleTableRoot * root, size_t gv_offset);
+
+void genMIPS_print_inst_var(FILE * file,  const char * inst, const char * reg, Symbole * sym);
 
 
 

@@ -7,7 +7,7 @@ moins prioritaire :
 reste a faire :
   - operateur
   - affectation - redirection tableau + var glob
-  - fonction declaration et appel (aussi recursif), enrengistrer registre retour
+  - fonction declaration et appel (aussi recursif)
   - branchement / boucle (label + dans quad ?)
 
 encore:
@@ -59,4 +59,19 @@ class GV {
     void main() {
         WriteString("string1");
     }
+}
+
+
+class MethodesEtParametres {
+
+    boolean fbb (boolean x) {}
+    void fvib (int x, boolean y) {}
+    int fibi (boolean x, int y) {}
+    int fi7 (int i0, boolean i1, int i2, int i3, boolean i4, boolean i5, int i6) {}
+    void fv33 (int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
+               int i8, int i9, int ia, int ib, int ic, int id, int ie, int iF,
+               int j0, int j1, int j2, int j3, int j4, int j5, int j6, int j7,
+               int j8, int j9, int ja, int jb, int jc, int jd, int je, int jF,
+               int x) {}
+    void main () {}
 }

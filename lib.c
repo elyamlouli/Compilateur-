@@ -265,6 +265,9 @@ Symbole * Symbole_new(const char * name) {
 }
 
 void Symbole_free(Symbole * symbole) {
+    if (symbole->kind == K_FCT) {
+        ListSymboles_free(symbole->value.args);
+    }
     free(symbole->name);
     free(symbole);
 }
@@ -323,46 +326,48 @@ void ListSymboles_free(struct ListSymboles * l) {
 void ListSymboles_add(struct ListSymboles * l, Symbole * symbole) {
     if (l->count == l->size) {
         l->size *= 2;
-        l->symboles = realloc(l->symboles, l->size * sizeof(Symbole *));
-        CHECKMALLOC(l->symboles);
+        printf("%s\n", l->symboles[0]->name);
+        l->symboles= realloc(l->symboles, l->size * sizeof(Symbole *));
+        CHECKMALLOC(l->symboles); // erreur realloc ?
     }
 
     l->symboles[l->count] = symbole;
     (l->count)++;
 }
 
-
 FunctionsContexts * FunctionsContexts_new() {
     FunctionsContexts *ctx = malloc(sizeof(FunctionsContexts));
     CHECKMALLOC(ctx);
     ctx->count = 0;
     ctx->size = 8;
-    ctx->lists_sym = malloc(ctx->size * sizeof(struct ListSymboles *));
-    CHECKMALLOC(ctx->lists_sym);
+    ctx->list_ctx = malloc(ctx->size * sizeof(Context));
+    CHECKMALLOC(ctx->list_ctx);
     return ctx;
 }
 
 void FunctionsContexts_free(FunctionsContexts * ctx) {
     for( size_t i = 0; i < ctx->count; i++){
-        ListSymboles_free(ctx->lists_sym[i]);
+        ListSymboles_free(ctx->list_ctx[i].list_sym);
     }
+    free(ctx->list_ctx);
     free(ctx);
 }
 
 void FunctionsContexts_push(FunctionsContexts * ctx) {
     if (ctx->count == ctx->size) {
         ctx->size *= 2;
-        ctx->lists_sym = realloc(ctx->lists_sym, ctx->size * sizeof(struct ListSymboles *));
-        CHECKMALLOC(ctx->lists_sym);
+        ctx->list_ctx = realloc(ctx->list_ctx, ctx->size * sizeof(Context));
+        CHECKMALLOC(ctx->list_ctx);
     }
 
-    ctx->lists_sym[ctx->count] = ListSymboles_new();
+    ctx->list_ctx[ctx->count].list_sym = ListSymboles_new();
+    ctx->list_ctx[ctx->count].ret = NULL;
     (ctx->count)++;
 }
 
 void FunctionsContexts_pop(FunctionsContexts * ctx) {
     if (ctx->count > 0) {
-        ListSymboles_free(ctx->lists_sym[ctx->count - 1]);
+        ListSymboles_free(ctx->list_ctx[ctx->count - 1].list_sym);
         (ctx->count)--;
     } else {
         fprintf(stderr, "error: FunctionsContexts_pop\n");
@@ -372,7 +377,7 @@ void FunctionsContexts_pop(FunctionsContexts * ctx) {
 
 void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
     if (ctx->count > 0) {
-        struct ListSymboles * list_sym = ctx->lists_sym[ctx->count-1];
+        struct ListSymboles * list_sym = ctx->list_ctx[ctx->count-1].list_sym;
         for (size_t j = 0; j < list_sym->count; j++) {
             Symbole * sym = list_sym->symboles[j];
             sym->offset += 4;
@@ -386,33 +391,47 @@ void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
 }
 
 void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx) {
-    size_t gv_count = 0;
+    size_t gv_offset = 0;
 
     fprintf(file, ".text\n");
+    fprintf(file, "\tlw $ra _exit\n");
+    fprintf(file, "\tb main\n");
 
-    for (size_t i = 0; i < code->nextquad; i++) {
-        Quad * quad = &(code->quads[i]);
+    for (size_t idx_quad = 0; idx_quad < code->nextquad; idx_quad++) {
+        Quad * quad = &(code->quads[idx_quad]);
         switch (quad->kind)
         {
         case OP_NFC: // new fonction context
+        {
             FunctionsContexts_push(ctx);
-            for (size_t i = 0; i < quad->sym1->value.args->count; i++) {
-                FunctionsContexts_new_var(ctx, quad->sym1->value.args->symboles[i]);
+            Symbole * ret = newtemp(symtable);
+            ListSymboles * args = quad->sym1->value.args;
+            for (size_t i = 0; i < args->count; i++) {
+                FunctionsContexts_new_var(ctx, args->symboles[i]);
             }
-            fprintf(file, "%s", quad->sym1->name);
 
+            // function label
+            fprintf(file, "%s:\n", quad->sym1->name);
+
+            // store ret addr
+            FunctionsContexts_new_var(ctx, ret);
+            ctx->list_ctx[ctx->count-1].ret = ret;
+            fprintf(file, "\taddi $sp, $sp, -4\n");
+            fprintf(file, "\tsw $ra, (sp)\n");
+        }
             break;
 
         case OP_DFC: // delete fonction context 
-            fprintf(file, "\taddiu $sp, $sp, %lu\n", (ctx->lists_sym[ctx->count - 1])->count * 4);
-            fprintf(file, "\tjr $ra\n"); // A CHANGER !! 
+            fprintf(file, "\tlw $ra, %lu(sp)\n", ctx->list_ctx[ctx->count - 1].ret->offset);
+            fprintf(file, "\taddiu $sp, $sp, %lu\n", (ctx->list_ctx[ctx->count - 1].list_sym)->count * 4);
+            fprintf(file, "\tjr $ra\n");
             FunctionsContexts_pop(ctx);
             break;
 
         case OP_GV: // global variable
         {
-            quad->sym1->offset = gv_count;
-            gv_count++;
+            quad->sym1->offset = gv_offset;
+            gv_offset += 4;
         }
             break;
 
@@ -501,25 +520,31 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             break;
         
         case OP_CALL:
-        {
-            
-        }
+            fprintf(file, "\tjal %s\n", quad->sym1->name);
+            fprintf(file, "\tlw $t1, $v1\n");
+            genMIPS_print_inst_var(file, "sw", "$t1", quad->sym2);
             break;
-        
         case OP_WS:
             break;
-            
+        case OP_PUSH:
+            genMIPS_print_inst_var(file, "lw", "$t1", quad->sym1);
+            fprintf(file, "\taddi $sp, $sp, -4\n");
+            fprintf(file, "\tsw $t1 ($sp)\n");
+            break;
         default:
             break;
         }
     }
 
-    genMIPS_data(file, symtable, gv_count);
+    fprintf(file, "_exit:\n");
+    fprintf(file, "\tli $v0 10\n");
+    fprintf(file, "\tsyscall\n");
+    genMIPS_data(file, symtable, gv_offset);
 }
 
-void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_count) {
+void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
     fprintf(file, ".data\n");
-    fprintf(file, "\t_GV: .space %lu\n", 4 * gv_count);
+    fprintf(file, "\t_GV: .space %lu\n", gv_offset);
 
 
     SymboleTable * symtable = root->next;
@@ -531,6 +556,7 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_count) {
         symtable = symtable->next;
     }
 
+
     size_t str_count = 0;
     HashTable *hash = symtable->table;
     for (size_t i = 0; i < hash->size; i++) {
@@ -540,14 +566,65 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_count) {
             if (sym->kind == K_TAB) {
                 fprintf(file, "\t%s: .space %lu\n", sym->name, 4 * sym->value.tab_size);
             } else if (sym->kind == K_CONST && sym->type == T_STRING) {
-                fprintf(file, "\t_STR%lu: .asciiz %s\n", str_count, sym->name);
+                fprintf(file, "\t_STR_%lu: .asciiz %s\n", str_count, sym->name);
                 str_count++;
             }
             bucket = bucket->next;
         }
     }
 
+    fprintf(file, "\t_SYS_MSG1: .asciiz \"Index out of range\"");
+    fprintf(file, "\t_SYS_MSG2: .asciiz \"Division by zero\"");
     
+}
+
+
+void genMIPS_print_inst_var(FILE * file, const char * inst, const char * reg, Symbole * sym) {
+    static size_t tab_count = 0;
+    switch (sym->kind) {
+    case K_VAR:
+        fprintf(file, "\t%s %s, %lu(sp)\n", inst, reg, sym->offset);
+        break;
+    case K_TAB_IDX:
+        tab_count++;
+        // check index in array range
+        genMIPS_print_inst_var(file, "lw", "$t9", sym->value.tab[1]);
+        fprintf(file, "\tbltz $t9, _TAB_ERR_\n");
+        fprintf(file, "\tbge $t9, %d, _TAB_ERR_\n", sym->value.tab[0]->value.tab_size);
+        fprintf(file, "\tb _TAB_NOERR_\n");
+        fprintf(file, "_TAB_ERR_%lu:\n", tab_count);
+        fprintf(file, "\tli $v0 4\n");
+        fprintf(file, "\tla $a0, _SYS_MSG1\n");
+        fprintf(file, "\tb _exit\n");
+        fprintf(file, "_TAB_NOERR_%lu:\n", tab_count);
+
+        fprintf(file, "\t%s %s, %s+%lu\n", inst, reg, sym->value.tab[0]->name, sym->offset);
+        break;
+    case K_GLOB:
+        fprintf(file, "\t%s %s, _GV+%lu\n",inst, reg, sym->offset);
+        break;
+    case K_CONST:
+        switch (sym->type) {
+        case T_INT:
+            fprintf(file, "\t%s %s, %d\n", inst, reg, sym->value.int_lit);
+            break;
+        case T_BOOL:
+            fprintf(file, "\t%s %s, %d\n", inst, reg, sym->value.bool_lit);
+            break;
+        case T_CHAR:
+            fprintf(file, "\t%s %s, %d\n", inst, reg, sym->value.char_lit);
+            break;
+        default:
+            fprintf(stderr, "error const type");
+            exit(1);
+            break;
+        }
+        break;
+    default:
+        fprintf(stderr, "error genMIPS_print_var_addr : symbole kind not handled\n");
+        exit(1);
+        break;
+    }
 }
 
 

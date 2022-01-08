@@ -71,9 +71,12 @@ typedef struct Symbole Symbole;
 %type <list_sym> list_field
 %type <list_sym> list_method_arg
 %type <list_sym> method_arg_opt
+%type <list_sym> list_method_call_expr
+%type <list_sym> method_call_expr_opt
 
 
 %type <type> type
+%type <type> method_type
 %type <type> assign_op
 
 
@@ -128,7 +131,18 @@ type ID
 }
 '(' method_arg_opt ')' 
 {
-    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+    Symbole * sym = newfunc(SYMTABLE, $2);
+    if ($1 == INT) {
+        sym->type = T_INT;
+    } else if ($1 == BOOLEAN){
+        sym->type = T_BOOL;
+    }
+    sym->kind = K_FCT;
+    sym->value.args = $5;
+
+    free($2);
+
+    gencode(CODE, OP_NFC, sym, NULL, NULL);
 }
 '{' block_bis '}' 
 {
@@ -144,13 +158,19 @@ VOID MAIN
 }
 '(' ')' 
 {
-    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+    Symbole * sym = newfunc(SYMTABLE, "main");
+    sym->type = T_VOID;
+    sym->kind = K_FCT;
+    sym->value.args = ListSymboles_new();
+
+    gencode(CODE, OP_NFC, sym, NULL, NULL);
 }
 '{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
     popctx(SYMTABLE);
-};
+}
+;
 
 
 
@@ -217,13 +237,24 @@ field
 list_method_decl 
 : method_decl list_method_decl
 
-| VOID MAIN '(' ')' 
+| 
+VOID MAIN 
 {
-    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+    pushctx(SYMTABLE);
 }
-block 
+'(' ')' 
+{
+    Symbole * sym = newfunc(SYMTABLE, "main");
+    sym->type = T_VOID;
+    sym->kind = K_FCT;
+    sym->value.args = ListSymboles_new();
+
+    gencode(CODE, OP_NFC, sym, NULL, NULL);
+}
+'{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
+    popctx(SYMTABLE);
 }
 ;
 
@@ -231,13 +262,31 @@ block
 
 
 method_decl 
-: method_type ID '(' method_arg_opt ')' 
+: method_type ID 
 {
-    gencode(CODE, OP_NFC, NULL, NULL, NULL);
+    pushctx(SYMTABLE);
 }
-block 
+'(' method_arg_opt ')' 
+{
+    Symbole * sym = newfunc(SYMTABLE, $2);
+    if ($1 == INT) {
+        sym->type = T_INT;
+    } else if ($1 == BOOLEAN){
+        sym->type = T_BOOL;
+    } else if ($1 == VOID) {
+        sym->type = T_VOID;
+    }
+    sym->kind = K_FCT;
+    sym->value.args = $5;
+
+    free($2);
+
+    gencode(CODE, OP_NFC, sym, NULL, NULL);
+}
+'{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
+    popctx(SYMTABLE);
 }
 ;
 
@@ -246,8 +295,14 @@ block
 
 method_type 
 : type 
+{
+    $$ = $1;
+}
 
 | VOID
+{
+    $$ = VOID;
+}
 ;
 
 
@@ -497,12 +552,28 @@ method_call
         fprintf(stderr, "ID \"%s\" is not a function\n", $1);
         exit(1);
     }
-    free($1);
 
+    ListSymboles * l1 = sym_fct->value.args;
+    ListSymboles * l2 = $3;
+
+    if (l1->count != l2->count) {
+        fprintf(stderr, "error : arguments number not the same\n");
+        exit(1);
+    }
+
+    for (size_t i = 0; i < l1->count; i++) {
+        if (l1->symboles[i]->type != l2->symboles[i]->type) {
+            fprintf(stderr, "error : function call not matching type\n");
+        }
+    }
+
+    free($1);
+    
+    // val de retour
     Symbole * sym = newtemp(SYMTABLE);
     sym->type = sym_fct->type;
     sym->kind = K_VAR;
-    gencode(CODE, OP_CALL, sym, NULL, NULL);
+    gencode(CODE, OP_CALL, sym_fct, sym, NULL);
     $$.ptr = sym;
 }
 
@@ -522,8 +593,17 @@ method_call
 
 method_call_expr_opt 
 : expr list_method_call_expr
+{
+    ListSymboles_add($2, $1.ptr);
+    gencode(CODE, OP_PUSH, $1.ptr, NULL, NULL);
+    $$ = $2;
+}
 
 |
+{
+    ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym;
+}
 ;
 
 
@@ -531,8 +611,17 @@ method_call_expr_opt
 
 list_method_call_expr 
 : ',' expr list_method_call_expr
+{
+    ListSymboles_add($3, $2.ptr);
+    gencode(CODE, OP_PUSH, $2.ptr, NULL, NULL);
+    $$ = $3;
+}
 
 |
+{
+    ListSymboles * list_sym = ListSymboles_new();
+    $$ = list_sym;
+}
 ;
 
 
@@ -570,7 +659,8 @@ location
     Symbole * entry_tab = newtemp(SYMTABLE);
     entry_tab->kind = K_TAB_IDX;
     entry_tab->type = sym->type;
-    entry_tab->value.tab = sym;
+    entry_tab->value.tab[0] = sym;
+    entry_tab->value.tab[1] = $3.ptr;
     $$.ptr = entry_tab;
 }
 ;
