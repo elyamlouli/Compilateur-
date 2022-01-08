@@ -1,0 +1,9 @@
+class AppelFonctionArgumentManquant {
+    void f (int i, boolean b, int j) {}
+    void main ()
+    {
+        int vi;
+        boolean vb;
+        ri = f (vi, vb);
+    }
+}

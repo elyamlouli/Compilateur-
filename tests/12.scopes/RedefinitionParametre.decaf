@@ -1,0 +1,4 @@
+class RedefinitionParametre {
+    void erreur (int x, int x) {}
+    void main () {}
+}

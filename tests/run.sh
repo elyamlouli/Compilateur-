@@ -157,7 +157,7 @@ print_test () { # name e_c e_x r_c r_x
             printf "%sko%s" $RED $NORMAL
         fi
         printf "/"
-        if test $ex -eq 2; then
+        if test $ex -eq 99; then
             printf "%s" "--"
         elif test $ex -eq $rx; then
             printf "%sok%s" $GREEN $NORMAL
@@ -182,16 +182,21 @@ do_compile () { # name
 }
 
 AWKPROG='
-BEGIN { vu = 0; }
+BEGIN { f = 0; x = 0; }
 /^([[:alnum:]]+)=([[:alnum:]]+)$/ { # lignes xxx=xxx
-    ++ vu;
     split ($0, m, /=/);
-    if (m[1] != m[2])
-        exit (1);
+    if (m[1] != m[2]) ++ f;
     next;
 }
-{ exit (1); }
-END { if (vu == 0) exit (1); }
+/^\*\*\*\* / {
+    if (x == 0) x = NR;
+    next;
+}
+{ ++ f; }
+END {
+    if (NR == 0 || f > 0 || x > 0 && x != NR) exit (2);
+    else exit (x > 0);
+}
 '
 do_execute () { # name
     $SPIM -file "$TEST_DIR/$name.mips" 2>&1 \
@@ -234,7 +239,7 @@ while read enabled mode category kind name; do
             # expected
             if test $action == "C"; then
                 e_comp=$result
-                e_exec=2
+                e_exec=99
             else
                 e_comp=0
                 e_exec=$result
@@ -246,7 +251,7 @@ while read enabled mode category kind name; do
                 do_execute $name
                 r_exec=$?
             else
-                r_exec=2
+                r_exec=99
             fi
             # print out (and count)
             print_test $name $e_comp $e_exec $r_comp $r_exec

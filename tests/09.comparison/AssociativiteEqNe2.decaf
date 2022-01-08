@@ -1,0 +1,12 @@
+class AssociativiteEqNe2 {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        int x;
+        x = 17;
+        if (x == 17 != true) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=false\n");
+    }
+
+}

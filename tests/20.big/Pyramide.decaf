@@ -1,0 +1,58 @@
+class Pyramide {
+    
+    int explicite (int n, int k)
+    {
+        if (k == 0)
+        {
+            return 1;
+        }
+        else
+        {
+            int s;
+            s = 0;
+            for i = 1, n
+            {
+                s += explicite (i, k-1);
+            }
+            return s;
+        }
+    }
+    
+    int pyramide (int n, int k)
+    {
+        int c;
+        c = 1;
+        for i = n, n+k-1
+        {
+            c = c * i;
+        }
+        for i = 2, k
+        {
+            c = c / i;
+        }
+        return c;
+    }
+    
+    void main ()
+    {
+        int n, k;
+        int ne, np, ns;
+    
+        n = 42; k = 5;
+        ne = explicite (n, k);
+        np = pyramide (n, k);
+        ns = 0;
+        for i = 1, n
+        {
+            ns += pyramide (i, k-1);
+        }
+        WriteInt (ne);
+        WriteString ("=");
+        WriteInt (np);
+        WriteString ("\n");
+        WriteInt (ne);
+        WriteString ("=");
+        WriteInt (ns);
+        WriteString ("\n");
+    }
+}

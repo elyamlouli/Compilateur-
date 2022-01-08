@@ -1,0 +1,9 @@
+class AppelFonctionArgumentEnExces {
+    void f (int i, boolean b) {}
+    void main ()
+    {
+        int vi;
+        boolean vb;
+        ri = f (42, vb, vi);
+    }
+}

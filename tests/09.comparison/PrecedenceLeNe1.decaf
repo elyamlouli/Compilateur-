@@ -1,0 +1,11 @@
+class PrecedenceLeNe1 {
+
+    void main ()
+    {
+        int x;
+        x = 17;
+        if (x <= 42 != true) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=false\n");
+    }
+
+}

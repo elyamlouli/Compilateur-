@@ -1,0 +1,18 @@
+class Reification4 {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        boolean a;
+        boolean b;
+        boolean c;
+        boolean d;
+        a = true;
+        b = false;
+        c = true;
+        d = ((a != b) && (b != c)) == (a == false && c || ! a && c == false);
+        WriteBool (d);
+        WriteString ("=false\n");
+    }
+
+}

@@ -124,13 +124,22 @@ l'exécution, les règles suivantes sont appliquées
 - les deux valeurs autour du signe `=` doivent être identiques,
   caractère par caractère
 
+- en cas de vérification dynamique qui échoue, la sortie doit contenir
+  une ligne qui commence 4 étoiles et une espace (`'**** '`) et peut
+  contenir n'importe quel texte avant la fin de ligne
+
+- si une vérification échoue, la ligne d'étoiles doit être la dernière
+  affichée par votre programme
+
 - il ne doit pas y avoir d'autre ligne dans la sortie du programme
   MIPS
 
 Tous les tests produisent une sortie de cette forme, avec les
 fonctions `WriteInt`, `WriteBool` et `WriteString` (la fonction
 `ReadInt` n'est jamais utilisée). Il faut donc que votre compilateur
-traduise correctement les appels de ces fonctions.
+traduise correctement les appels de ces fonctions. La ligne signalant
+l'échec d'une vérification dynamique doit être produite par votre
+programme MIPS.
 
 Cette partie est certainement la plus fragile du script. N'hésitez pas
 à regarder les détails (dans la fonction `do_execute`), et à proposer

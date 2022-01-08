@@ -1,0 +1,9 @@
+class IncrementationScalaireTypeIncorrect {
+
+    void main ()
+    {
+        boolean x;
+        x += true;
+    }
+
+}

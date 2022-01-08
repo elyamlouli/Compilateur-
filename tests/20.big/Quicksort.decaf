@@ -1,0 +1,76 @@
+class Quicksort {
+    // ce quicksort vous est offert par Alexandre Vogel
+    int tab[1000];
+    
+    void init_tab ()
+    {
+        for i = 0, 999
+        {
+            tab[i] = (17*i + 42) % 1000;
+        }
+    }
+    
+    boolean verif_result ()
+    {
+        for i = 0, 998
+        {
+            if (tab[i] >= tab[i+1])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    void swap (int i, int j)
+    {
+        int tmp;
+        tmp = tab[i];
+        tab[i] = tab[j];
+        tab[j] = tmp;
+    }
+    
+    int partition (int lo, int hi)
+    {
+        int pivot, i;
+    
+        pivot = tab[hi];
+        i = lo - 1;
+    
+        for j = lo, hi
+        {
+            if ( tab[j] < pivot)
+            {
+                i += 1;
+                swap(i, j);
+            }
+        }
+        i += 1;
+        swap(i, hi);
+            
+        return i;
+    }
+    
+    void qsort (int lo, int hi)
+    {
+        int p;
+    
+        if (lo >= hi || lo < 0)
+        {
+            return;
+        }
+    
+        p = partition(lo, hi);
+    
+        qsort(lo, p-1);
+        qsort(p+1, hi);
+    }
+    
+    void main()
+    {
+        init_tab();
+        qsort(0, 1000 - 1);
+        WriteBool (verif_result ());
+        WriteString ("=true\n");
+    }
+}

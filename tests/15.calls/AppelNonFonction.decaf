@@ -1,0 +1,8 @@
+class AppelNonFonction {
+    int f;
+    void main ()
+    {
+        int r;
+        r = f ();
+    }
+}

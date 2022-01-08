@@ -1,0 +1,39 @@
+class AppelArgumentsBooleens2 {
+    // suggéré par Siham Janati et son groupe
+    int boolToInt(boolean a)
+    {
+        if(a){ return 1;  }
+        else { return 0;  }
+    }
+    int binaryToDecimal(boolean a, boolean b, boolean c, boolean d)
+    {
+        return boolToInt(a)*2*2*2 + boolToInt(b)*2*2 +
+               boolToInt(c)*2 + boolToInt(d);
+    }
+    void main ()
+    {
+        boolean a;
+        boolean b;
+        boolean c;
+        boolean d;
+        boolean e;
+        boolean f;
+        boolean g;
+        int res;
+        int x;
+        x = 42;
+        a = true;
+        b = false;
+        c = true;
+        res = binaryToDecimal(((a != b) && (b != c))
+                              ==
+                              (a == true && c || ! a && c == false),
+                              ((a != b) && (b != c))
+                              ==
+                              (a == false && c || ! a && c == false),
+                              x <= 42 != x < 10,
+                              x <= 42 == x < 10);
+        WriteInt (res);
+        WriteString ("=10\n");
+    }
+}

@@ -1,0 +1,12 @@
+class PrecedenceLeNe2 {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        int x;
+        x = 17;
+        if (x <= 42 != false) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
+    }
+
+}

@@ -1,0 +1,10 @@
+class AccesTableauIndiceNonEntier {
+    int tab [1];
+    void main ()
+    {
+        int x;
+        boolean b;
+        b = true;
+        tab [b] = 1;
+    }
+}
