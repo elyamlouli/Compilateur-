@@ -5,10 +5,13 @@ moins prioritaire :
   - meilleur affichage erreur
 
 reste a faire :
-  - variable globale
-  - affectation
-  - fonction declaration et appel (aussi recursif), enrengistrer registre
-  - branchement / boucle (label ? ardress relatif ?)
+  - operateur
+  - affectation - redirection tableau + var glob
+  - fonction declaration et appel (aussi recursif), enrengistrer registre retour
+  - branchement / boucle (label + dans quad ?)
+
+encore:
+  - 
 
 
 class Test {

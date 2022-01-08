@@ -98,40 +98,58 @@ program
 field_method 
 : field_decl field_method
 
-| VOID ID '(' method_arg_opt ')'
+| 
+VOID ID 
 {
-    Symbole * sym = newname(SYMTABLE, $2);
+    pushctx(SYMTABLE);
+}
+'(' method_arg_opt ')'
+{
+    Symbole * sym = newfunc(SYMTABLE, $2);
     sym->type = T_VOID;
     sym->kind = K_FCT;
-    sym->value.args = $4;
+    sym->value.args = $5;
 
     free($2);
     
     gencode(CODE, OP_NFC, sym, NULL, NULL);
 }
-block 
+'{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
+    popctx(SYMTABLE);
 }
 list_method_decl
 
-| type ID '(' method_arg_opt ')' 
+|
+type ID 
+{
+    pushctx(SYMTABLE);
+}
+'(' method_arg_opt ')' 
 {
     gencode(CODE, OP_NFC, NULL, NULL, NULL);
 }
-block 
+'{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
+    popctx(SYMTABLE);
 }
 list_method_decl
 
-| VOID MAIN '(' ')' 
+| 
+VOID MAIN 
+{
+    pushctx(SYMTABLE);
+}
+'(' ')' 
 {
     gencode(CODE, OP_NFC, NULL, NULL, NULL);
 }
-block 
+'{' block_bis '}' 
 {
     gencode(CODE, OP_DFC, NULL, NULL, NULL);
+    popctx(SYMTABLE);
 };
 
 
@@ -272,12 +290,14 @@ list_method_arg
 method_arg 
 : type ID
 {
-    Symbole * sym = newtemp(SYMTABLE);
+    Symbole * sym = newname(SYMTABLE, $2);
+    sym->kind = K_ARG;
     if ($1 == INT) {
         sym->type = T_INT;
     } else if ($1 == BOOLEAN) {
         sym->type = T_BOOL;
     }
+    free($2);
     $$.ptr = sym;
 }
 ;
@@ -288,14 +308,20 @@ method_arg
 block 
 : '{'
 {
-
+    pushctx(SYMTABLE);
 }
-
-list_var_decl list_statement 
+block_bis
 {
-
+    popctx(SYMTABLE);
 }
 '}'
+;
+
+
+
+
+block_bis
+:list_var_decl list_statement
 ;
 
 

@@ -229,6 +229,24 @@ Symbole * newtemp (SymboleTableRoot * root) {
     return newname(root, name);
 }
 
+Symbole * newfunc(SymboleTableRoot * root, const char * name) {
+    SymboleTable * symtable = root->next;
+    while (symtable->next != NULL) {
+        symtable = symtable->next;
+    }
+
+    Symbole * symbole = HashTable_get(symtable->table, name);
+    if (symbole != NULL) {
+        fprintf(stderr, "error: function %s aleardy declared\n", name);
+        exit(1);        
+    }
+
+    symbole = Symbole_new(name);
+    HashTable_insert(symtable->table, symbole);
+
+    return symbole;
+}
+
 
 
 Symbole * Symbole_new(const char * name) {
@@ -378,6 +396,11 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
         {
         case OP_NFC: // new fonction context
             FunctionsContexts_push(ctx);
+            for (size_t i = 0; i < quad->sym1->value.args->count; i++) {
+                FunctionsContexts_new_var(ctx, quad->sym1->value.args->symboles[i]);
+            }
+            fprintf(file, "%s", quad->sym1->name);
+
             break;
 
         case OP_DFC: // delete fonction context 
@@ -423,15 +446,37 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             break;
         
         case OP_SUB:
+            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
+            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
+            fprintf(file, "\tsubu $t1, $t2, $t3\n");
+            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
             break;
         
         case OP_MUL:
+            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
+            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
+            fprintf(file, "\tmulou $t1, $t2, $t3\n");
+            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
             break;
         
         case OP_DIV:
+            // vérifications sur le signe/div par 0 à faire
+            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
+            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
+            fprintf(file, "\tdivu $t1, $t2, $t3\n");
+            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
             break;
         
         case OP_MOD:
+            /* divu Rsrc1, Rsrc2 Divide (unsigned)
+            Divide the contents of the two registers. divu treats is operands as unsigned values. Leave the
+            quotient in register lo and the remainder in register hi. Note that if an operand is negative,
+            the remainder is unspecified by the MIPS architecture and depends on the conventions of the
+            machine on which SPIM is run. */ 
+            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
+            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
+            fprintf(file, "\tdivu $t2, $t3\n");
+            //fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);      //a modifier
             break;
         
         case OP_INCR:

@@ -89,6 +89,7 @@ Symbole * newconst(SymboleTableRoot * root, const char * name);
 
 Symbole * newtemp (SymboleTableRoot * root);
 
+Symbole * newfunc(SymboleTableRoot * root, const char * name);
 
 struct Symbole {
     // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
