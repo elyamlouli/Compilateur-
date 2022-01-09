@@ -79,9 +79,18 @@ class MethodesEtParametres {
 
 class prog {
     int a[10];  
+    boolean b1, b2;
     void main() {
-        a[1] = 20;
+        a[0] = 34;
+        a[1] = a[0];
+        b1 = true;
+        b2 = false;
         WriteInt(a[1]);
+        WriteString("\n");
+        WriteBool(b1);
+        WriteString("\n");
+        WriteBool(b2);
+        WriteString("\n");
     }
 }
 

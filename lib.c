@@ -418,6 +418,7 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
 
     for (size_t idx_quad = 0; idx_quad < code->nextquad; idx_quad++) {
         Quad * quad = &(code->quads[idx_quad]);
+        fprintf(file, "# %lu  %d\n", idx_quad, quad->kind);
         switch (quad->kind)
         {
         case OP_NFC: // new fonction context
@@ -585,7 +586,6 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
     fprintf(file, "_TAB_CHECK_IDX:\n");
     fprintf(file, "\tbltz $a2, _TAB_ERR\n");
     fprintf(file, "\tbge $a2, $a3 _TAB_ERR\n");
-    fprintf(file, "\tli $v1, 0\n");
     fprintf(file, "\tjr $ra\n");
     fprintf(file, "_TAB_ERR:\n");
     fprintf(file, "\tli $v0, 4\n");
@@ -640,8 +640,9 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
 
 void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
     fprintf(file, ".data\n");
-    fprintf(file, "\t_GV: .space %lu\n", gv_offset);
 
+    // global variable
+    fprintf(file, "\t_GV: .space %lu\n", gv_offset);
 
     SymboleTable * symtable = root->next;
     if (symtable == NULL) {
@@ -652,7 +653,7 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
         symtable = symtable->next;
     }
 
-
+    // array
     HashTable *hash = symtable->table;
     for (size_t i = 0; i < hash->size; i++) {
         HashTableBucket * bucket = hash->buckets[i].next;
@@ -660,8 +661,19 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
             Symbole * sym = bucket->symbole;
             if (sym->kind == K_TAB) {
                 fprintf(file, "\t%s: .space %lu\n", sym->name, 4 * sym->value.tab_size);
-            } else if (sym->kind == K_CONST && sym->type == T_STRING) {
-                fprintf(file, "\t%s: .asciiz %s\n", sym->name, sym->value.string_lit);
+            }
+            bucket = bucket->next;
+        }
+    }
+
+    // str : add last for memory alignment
+    hash = symtable->table;
+    for (size_t i = 0; i < hash->size; i++) {
+        HashTableBucket * bucket = hash->buckets[i].next;
+        while (bucket != NULL) {
+            Symbole * sym = bucket->symbole;
+            if (sym->kind == K_CONST && sym->type == T_STRING) {
+                fprintf(file, "\t%s: .asciiz %s\n", sym->value.string_lit, sym->name);
             }
             bucket = bucket->next;
         }
@@ -701,12 +713,11 @@ void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym) {
         break;
     case K_TAB_IDX:
         // get and check index value
-        genMIPS_inst_load(file, "$t9", sym->value.tab[1]);
-        fprintf(file, "\tmove $a2, $t9\n");
+        genMIPS_inst_load(file, "$a2", sym->value.tab[1]);
         fprintf(file, "\tli $a3, %lu\n", sym->value.tab[0]->value.tab_size);
         fprintf(file, "\tjal _TAB_CHECK_IDX\n");
-
-        fprintf(file, "\tlw %s, %s+%lu\n", reg, sym->value.tab[0]->name, sym->offset);
+        fprintf(file, "\tmulou $t9, $a2, 4\n");
+        fprintf(file, "\tlw %s, %s+0($t9)\n", reg, sym->value.tab[0]->name);
         break;
     default:
         fprintf(stderr, "error genMIPS_inst_load : symbole kind not handled\n");
@@ -726,12 +737,11 @@ void genMIPS_inst_store(FILE * file, const char * reg, Symbole * sym) {
         break;
     case K_TAB_IDX:
         // get and check index value
-        genMIPS_inst_load(file, "$t9", sym->value.tab[1]);
-        fprintf(file, "\tmove $a2, $t9\n");
+        genMIPS_inst_load(file, "$a2", sym->value.tab[1]);
         fprintf(file, "\tli $a3, %lu\n", sym->value.tab[0]->value.tab_size);
         fprintf(file, "\tjal _TAB_CHECK_IDX\n");
-
-        fprintf(file, "\tsw %s, %s+%lu\n", reg, sym->value.tab[0]->name, sym->offset);
+        fprintf(file, "\tmulou $t9, $a2, 4\n");
+        fprintf(file, "\tsw %s, %s+0($t9)\n", reg, sym->value.tab[0]->name);
         break;
     default:
         fprintf(stderr, "error genMIPS_print_inst_store : symbole kind not handled\n");
