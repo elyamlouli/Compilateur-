@@ -554,7 +554,7 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
         
         case OP_CALL:
             fprintf(file, "\tjal %s\n", quad->sym1->name);
-            genMIPS_inst_store(file, "$v1", quad->sym1);
+            genMIPS_inst_store(file, "$v1", quad->sym2);
             break;
         case OP_WS:
             fprintf(file, "\tla $a3, %s\n", quad->sym1->value.string_lit);
@@ -744,7 +744,7 @@ void genMIPS_inst_store(FILE * file, const char * reg, Symbole * sym) {
         fprintf(file, "\tsw %s, %s+0($t9)\n", reg, sym->value.tab[0]->name);
         break;
     default:
-        fprintf(stderr, "error genMIPS_print_inst_store : symbole kind not handled\n");
+        fprintf(stderr, "error genMIPS_print_inst_store : symbole kind \"%d\" not handled\n", sym->kind);
         exit(1);
         break;
     }
