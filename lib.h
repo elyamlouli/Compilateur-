@@ -68,6 +68,7 @@ SymboleTable * SymboleTable_free(SymboleTable * symtable);
 struct SymboleTableRoot {
     size_t temporary;
     SymboleTable * next;
+    SymboleTable * poped;
 };
 
 SymboleTableRoot * SymboleTableRoot_new();

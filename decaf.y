@@ -567,6 +567,7 @@ method_call
         }
     }
 
+    ListSymboles_free(l2);
     free($1);
     
     // val de retour

@@ -140,6 +140,7 @@ SymboleTableRoot * SymboleTableRoot_new() {
 
     root->next = SymboleTable_new();
     root->temporary = 0;
+    root->poped = NULL;
 
     return root;
 }
@@ -149,6 +150,12 @@ void SymboleTableRoot_free(SymboleTableRoot * root) {
     while (symtable != NULL) {
         symtable = SymboleTable_free(symtable);
     }
+
+    symtable = root->poped;
+    while (symtable != NULL) {
+        symtable = SymboleTable_free(symtable);
+    }
+    
     free(root);
 }
 
@@ -170,7 +177,9 @@ void pushctx(SymboleTableRoot * root) {
 void popctx(SymboleTableRoot * root) {
     SymboleTable * symtable = root->next;
     root->next = symtable->next;
-    SymboleTable_free(symtable);
+
+    symtable->next = root->poped;
+    root->poped = symtable;
 }
 
 Symbole * lookup(SymboleTableRoot * root, const char * name ) {
@@ -326,7 +335,6 @@ void ListSymboles_free(struct ListSymboles * l) {
 void ListSymboles_add(struct ListSymboles * l, Symbole * symbole) {
     if (l->count == l->size) {
         l->size *= 2;
-        printf("%s\n", l->symboles[0]->name);
         l->symboles= realloc(l->symboles, l->size * sizeof(Symbole *));
         CHECKMALLOC(l->symboles); // erreur realloc ?
     }
