@@ -12,7 +12,7 @@ YACC = bison -y
 all: $(prefixe)
 
 $(prefixe): $(prefixe).tab.o lex.yy.o $(prefixe).o lib.o
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ -g
 
 $(prefixe).tab.c: $(prefixe).y
 	bison -d -v $(prefixe).y

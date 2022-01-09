@@ -9,6 +9,7 @@ reste a faire :
   - affectation - redirection tableau + var glob
   - fonction declaration et appel (aussi recursif)
   - branchement / boucle (label + dans quad ?)
+  - verif type et kind
 
 encore:
   - 
@@ -75,3 +76,26 @@ class MethodesEtParametres {
                int x) {}
     void main () {}
 }
+
+class prog {
+    int a[10];  
+    void main() {
+        a[1] = 20;
+        WriteInt(a[1]);
+    }
+}
+
+```
+$a2 -> taille idx
+$a3 -> taille tableau
+_TAB_CHECK_IDX:
+    bltz $a2, _TAB_ERR
+    bge $a2, $a3 TAB_ERR
+    li $v1, 0
+    jr $ra
+_TAB_ERR:
+    li $v0, 4
+    la $a0, SYS_MSG1
+    b _exit
+
+```

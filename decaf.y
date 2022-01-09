@@ -1,6 +1,9 @@
 %{
 #include "decaf.h"
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 extern int yylex();
 int yyerror(char*);
@@ -346,7 +349,7 @@ method_arg
 : type ID
 {
     Symbole * sym = newname(SYMTABLE, $2);
-    sym->kind = K_ARG;
+    sym->kind = K_VAR;
     if ($1 == INT) {
         sym->type = T_INT;
     } else if ($1 == BOOLEAN) {
@@ -461,17 +464,14 @@ statement
 : location assign_op expr ';'
 {
     if ($2 == '=') {
-        if (!(
-               (($1.ptr)->type == T_INT && ($3.ptr)->type == T_INT) 
-            || (($1.ptr)->type == T_BOOL && ($3.ptr)->type == T_BOOL) 
-        )) {
+        if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
             fprintf(stderr, "type not INT or BOOL for \'=\' \n");
             exit(1);
         }
-        gencode(CODE, OP_EQ, $1.ptr, $3.ptr, NULL);
+        gencode(CODE, OP_ASSIGN, $1.ptr, $3.ptr, NULL);
 
     }  else {
-        if (!( ($1.ptr)->type == T_INT && ($3.ptr)->type == T_INT )) {
+        if (!op_is_int($1.ptr, $3.ptr)) {
             fprintf(stderr, "type not INT for INCR or DECR \n");
             exit(1);
         };
@@ -564,6 +564,7 @@ method_call
     for (size_t i = 0; i < l1->count; i++) {
         if (l1->symboles[i]->type != l2->symboles[i]->type) {
             fprintf(stderr, "error : function call not matching type\n");
+            exit(1);
         }
     }
 
@@ -580,12 +581,54 @@ method_call
 
 | WS '(' STRING_LIT ')'
 {
+    char name[30];
+    int res = snprintf(name, 30, "_STR_%lu", SYMTABLE->temporary);
+    (SYMTABLE->temporary)++;
+    if (res < 0 || res >= 30) {
+        perror("bool_lit snprintf");
+        exit(1);
+    }
+    char * str_id = strndup(name, res);
+    if (str_id == NULL) {
+        perror("strndup");
+        exit(1);
+    }
+    
     Symbole * sym = newconst(SYMTABLE, $3);
     sym->type = T_STRING;
     sym->kind = K_CONST;
-    sym->value.string_lit = sym->name;
+    sym->value.string_lit = str_id;
     free($3);
     gencode(CODE, OP_WS, sym, NULL, NULL);
+}
+
+| WI '(' expr ')'
+{
+    if (($3.ptr)->type != T_INT) {
+        fprintf(stderr, "WriteInt argument type is not int\n");
+        exit(1);
+    }
+    gencode(CODE, OP_WI, $3.ptr, NULL, NULL);
+}
+
+
+| WB '(' expr ')'
+{
+    if (($3.ptr)->type != T_BOOL) {
+        fprintf(stderr, "WriteBool argument type is not int\n");
+        exit(1);
+    }
+    gencode(CODE, OP_WB, $3.ptr, NULL, NULL);
+}
+
+
+| RI '(' location ')'
+{
+    if (($3.ptr)->type != T_INT) {
+        fprintf(stderr, "WriteInt argument type is not int\n");
+        exit(1);
+    }
+    gencode(CODE, OP_RI, $3.ptr, NULL, NULL);
 }
 ;
 
@@ -636,6 +679,12 @@ location
         fprintf(stderr, "ID \"%s\" is not declared\n", $1);
         exit(1);
     }
+
+    if (!(sym->kind == K_VAR || sym->kind == K_TAB_IDX || sym->kind == K_GLOB)) {
+        fprintf(stderr, "ID %s wrong kind\n", $1);
+        exit(1);
+    }
+
     free($1);
     $$.ptr = sym;
 }
@@ -684,7 +733,7 @@ expr
 
 | expr '+' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "ADD type not INT\n");
         exit(1);
     };
@@ -694,12 +743,11 @@ expr
     sym->kind = K_VAR;
     gencode(CODE, OP_ADD, sym, $1.ptr, $3.ptr);
     $$.ptr = sym;
-    SymboleTableRoot_dump(SYMTABLE);
 }
 
 | expr '-' expr 
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "SUB type not INT\n");
         exit(1);
     };
@@ -713,7 +761,7 @@ expr
 
 | expr '*' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "MUL type not INT\n");
         exit(1);
     };
@@ -727,7 +775,7 @@ expr
 
 | expr '/' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "DIV type not INT\n");
         exit(1);
     };
@@ -741,7 +789,7 @@ expr
 
 | expr '%' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "MOD type not INT\n");
         exit(1);
     };
@@ -755,7 +803,7 @@ expr
 
 | expr '<' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "LT type not INT\n");
         exit(1);
     };
@@ -769,7 +817,7 @@ expr
 
 | expr '>' expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "GT type not INT\n");
         exit(1);
     };
@@ -783,7 +831,7 @@ expr
 
 | expr LE expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "LE type not INT\n");
         exit(1);
     };
@@ -797,7 +845,7 @@ expr
 
 | expr GE expr
 {
-    if (!( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT )) {
+    if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "GE type not INT\n");
         exit(1);
     };
@@ -811,10 +859,7 @@ expr
 
 | expr EQ expr
 {
-    if (!(
-           ( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT ) 
-        || ( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL ) 
-       )) {
+    if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
         fprintf(stderr, "EQ type not INT or BOOL\n");
         exit(1);
     };
@@ -828,10 +873,7 @@ expr
 
 | expr NE expr
 {
-    if (!(
-           ( ($1.ptr)->type == T_INT  && ($3.ptr)->type == T_INT ) 
-        || ( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )
-       )) {
+    if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
         fprintf(stderr, "NE type not INT or BOOL\n");
         exit(1);
     };
@@ -845,7 +887,7 @@ expr
 
 | expr AND expr
 {
-    if (!( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )) {
+    if (!(op_is_bool($1.ptr, $3.ptr))) {
         fprintf(stderr, "AND type not BOOL\n");
         exit(1);
     };
@@ -859,7 +901,7 @@ expr
 
 | expr OR expr
 {
-    if (!( ($1.ptr)->type == T_BOOL  && ($3.ptr)->type == T_BOOL )) {
+    if (!(op_is_bool($1.ptr, $3.ptr))) {
         fprintf(stderr, "OR type not BOOL\n");
         exit(1);
     };
@@ -907,7 +949,8 @@ expr
 
 
 
-literal : INT_LIT 
+literal 
+: INT_LIT 
 {
     char name[20];
     int res = snprintf(name, 20, "-I%li", $1);
@@ -958,6 +1001,6 @@ literal : INT_LIT
 
 
 int yyerror(char* s) {
-    printf("error : %s\n", s);
+    fprintf(stderr, "error : %s\n", s);
     return 1;
 }

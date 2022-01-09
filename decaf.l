@@ -122,6 +122,9 @@ id {alpha}{alpha_num}*
 "," { return yytext[0]; }
 
 "WriteString" { return WS; }
+"ReadInt" { return RI; }
+"WriteInt" { return WI; }
+"WriteBool" { return WB; }
 
 {id} { 
     yylval.strval = strndup(yytext, yyleng);

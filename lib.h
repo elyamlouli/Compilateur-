@@ -19,6 +19,12 @@ typedef struct Context Context;
 typedef struct FunctionsContexts FunctionsContexts;
 
 
+/* Section fontion utils decaf */
+int op_is_int(Symbole * sym1, Symbole * sym2);
+
+int op_is_bool(Symbole * sym1, Symbole * sym2);
+
+
 /* Section pour la HashTable */
 
 struct HashTableBucketRoot {
@@ -96,7 +102,7 @@ Symbole * newfunc(SymboleTableRoot * root, const char * name);
 struct Symbole {
     // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
     enum sym_type { T_NONE, T_INT, T_BOOL, T_STRING, T_CHAR, T_VOID } type;
-    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_IDX, K_GLOB, K_FCT, K_ARG } kind;
+    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_IDX, K_GLOB, K_FCT } kind;
     char * name;
     union {
         // un truc pour les fonctions
@@ -123,12 +129,12 @@ void Symbole_free(Symbole * symbole);
 struct Quad {
   enum quad_kind { 
     OP_LV, OP_GV, OP_NFC, OP_DFC,
-    OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
+    OP_GE, OP_LE, OP_NE, OP_GT, OP_LT, OP_EQ,
     OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,
-    OP_INCR, OP_DECR, OP_EQ,
+    OP_INCR, OP_DECR, OP_ASSIGN,
     OP_AND, OP_OR, OP_NOT,
     OP_UMOINS,
-    OP_CALL, OP_WS,
+    OP_CALL, OP_WS, OP_WI, OP_RI, OP_WB,
     OP_PUSH,
     } kind;
   Symbole * sym1;
@@ -188,8 +194,8 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
 
 void genMIPS_data(FILE *file, SymboleTableRoot * root, size_t gv_offset);
 
-void genMIPS_print_inst_var(FILE * file,  const char * inst, const char * reg, Symbole * sym);
+void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym);
 
-
+void genMIPS_inst_store(FILE * file, const char * reg, Symbole * sym);
 
 #endif
