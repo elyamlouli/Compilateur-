@@ -169,14 +169,21 @@ void SymboleTableRoot_free(SymboleTableRoot * root) {
 }
 
 void SymboleTableRoot_dump(SymboleTableRoot * root) {
+    printf("===== TABLE GLOBALE =====\n");
     SymboleTable * symtable = root->next;
-    // ajout de poped
-    SymboleTable * poped = root->poped;
     while (symtable != NULL) {
         HashTable_dump(symtable->table);
-        HashTable_dump(poped->table);
         printf("\n");
         symtable = symtable->next;
+    }
+
+    printf("\n\n");
+    
+    printf("===== TABLES SCOPES =====\n");
+    SymboleTable * poped = root->poped->next;
+    while (poped != NULL) {
+        HashTable_dump(poped->table);
+        printf("\n");
         poped = poped->next;
     }
 }
@@ -496,6 +503,7 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
     fprintf(file, ".text\n");
     fprintf(file, "\tlw $ra _exit\n");
     fprintf(file, "\tb main\n");
+    fprintf(file, "\tb _exit\n");
 
     for (size_t idx_quad = 0; idx_quad < code->nextquad; idx_quad++) {
         Quad * quad = &(code->quads[idx_quad]);

@@ -36,8 +36,9 @@ int main(int argc, char **argv) {
         {"tos", no_argument, 0,'t' }
     };
 
-    int long_index =0;
-    while ((opt = getopt_long(argc, argv,"hvto:",long_options, &long_index )) != -1) {
+    int dump_symtable = 0;q
+    int long_index = 0;
+    while ((opt = getopt_long_only(argc, argv,"hvto:",long_options, &long_index )) != -1) {
         switch (opt) {
             case 'h':
                 print_usage();
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
                 printf("Michel TCHING, Alexandre SEGOND, Fatima Zahra EL YAMLOULI\n");
                 break;
             case 't' : 
-                print_symtable();
+                dump_symtable = 1;
                 break;
             case 'o': 
                 file_output = optarg; 
@@ -71,7 +72,8 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
-
+    
+    
     int res = yyparse();
     genMIPS(file, CODE, SYMTABLE, FUN_CTX);
     fflush(file);
@@ -79,6 +81,11 @@ int main(int argc, char **argv) {
         perror("fclose");
         exit(EXIT_FAILURE);
     }
+
+    if (dump_symtable) {
+        print_symtable();
+    }
+
     FunctionsContexts_free(FUN_CTX);
     Code_free(CODE);
     SymboleTableRoot_free(SYMTABLE);

@@ -134,7 +134,7 @@ id {alpha}{alpha_num}*
 
 [[:space:]] ;
 
-. { puts("error"); }
+. { puts("error lexicale"); }
 
 %%
 

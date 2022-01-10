@@ -28,7 +28,6 @@ typedef struct Symbole Symbole;
     struct ListSymboles * list_sym;
 }
 
-// %token COMMENT
 %token BOOLEAN
 %token BREAK
 %token CLASS
@@ -43,7 +42,6 @@ typedef struct Symbole Symbole;
 %token MAIN
 
 
-// %token PROGRAM
 %token GE
 %token LE
 %token EQ
@@ -620,6 +618,7 @@ method_call
     Symbole * sym = newtemp(SYMTABLE);
     sym->type = sym_fct->type;
     sym->kind = K_VAR;
+    gencode(CODE, OP_LV, sym, NULL, NULL);
     gencode(CODE, OP_CALL, sym_fct, sym, NULL);
     $$.ptr = sym;
 }
