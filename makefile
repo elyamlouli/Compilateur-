@@ -12,10 +12,10 @@ YACC = bison -y
 all: $(prefixe)
 
 $(prefixe): $(prefixe).tab.o lex.yy.o $(prefixe).o lib.o
-	$(CC) $^ -o $@ -g
+	$(CC) $^ -o $@ -g 
 
 $(prefixe).tab.c: $(prefixe).y
-	bison -d -v $(prefixe).y
+	bison -d -v $(prefixe).y -Wcounterexamples
 
 lex.yy.c: $(prefixe).l $(prefixe).tab.h
 	flex $(prefixe).l

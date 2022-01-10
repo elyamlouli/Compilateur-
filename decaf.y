@@ -504,8 +504,38 @@ statement
 | method_call ';'
 
 | IF '(' expr ')' block statement_else_opt
+{
+    if (($3.ptr)->type != T_BOOL) {
+        fprintf(stderr, "if condition type not boolean\n");
+        exit(EXIT_FAILURE);
+    }
 
-| FOR ID '=' expr ',' expr block
+}
+
+| FOR ID '=' expr ',' expr 
+{ 
+    pushctx(SYMTABLE);
+
+    
+
+    if (!($4.ptr->type == T_INT && $6.ptr->type == T_INT)) {
+        fprintf(stderr, "for loop arg not int\n");
+        exit(EXIT_FAILURE);
+    }
+
+    Symbole * sym = newname(SYMTABLE, $2);
+    sym->kind = K_VAR;
+    sym->type =T_INT;
+
+    gencode(CODE, OP_ASSIGN, sym, $4.ptr, NULL);
+
+    free($2);
+}
+block
+{
+    popctx(SYMTABLE);
+}
+
 
 | RETURN statement_expr_opt ';'
 

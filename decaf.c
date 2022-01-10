@@ -27,7 +27,8 @@ void print_symtable() {
 
 int main(int argc, char **argv) {
 
-    char* file_output = NULL; 
+    // char* file_output = NULL; 
+    char* file_output = "decaf.mips"; 
 
     // traitement arguments
     int opt= 0;
@@ -61,17 +62,18 @@ int main(int argc, char **argv) {
     SYMTABLE = SymboleTableRoot_new();
     CODE = Code_new();
     FUN_CTX = FunctionsContexts_new();
-    FILE * file = stdout;
+    // FILE * file = stdout;
+    FILE * file = fopen("decaf.mips", "w+");
 
     if (file_output != NULL)
     {
-        FILE * file = fopen(file_output, "w+");
+        file = fopen("decaf.mips", "w+");
+        // FILE * file = fopen(file_output, "w+");
     }
     if (file == NULL) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-    // FILE * file = stdout;
 
     int res = yyparse();
     genMIPS(file, CODE, SYMTABLE, FUN_CTX);

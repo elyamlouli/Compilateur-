@@ -127,6 +127,7 @@ void Symbole_free(Symbole * symbole);
 
 
 
+/* section Quad et code */
 
 struct Quad {
   enum quad_kind { 
@@ -160,6 +161,8 @@ void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole 
 
 
 
+/* section Goto */
+
 struct ListGoto {
     size_t size;
     size_t count;
@@ -177,6 +180,8 @@ ListGoto * ListGoto_concat(ListGoto * lg1,  ListGoto * lg2);
 void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx);
 
 
+
+/* Section ListSymboles */
 
 struct ListSymboles {
     size_t size;
