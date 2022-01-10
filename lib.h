@@ -114,11 +114,11 @@ struct Symbole {
         int tab_size;       // taille du tableau
         Symbole * tab[2];   // référence au tableau + référence indice
         ListSymboles *args; // arguments 
+        size_t idx_quad;    // indice quads
     } value;        
     uint32_t offset; // adresse dans le code mips
                     // offset par rapport au SP pour les variables locales
                     // offset par rapport à la déclaration? des variables globales 
-                    // idx_quad
 };
 
 Symbole * Symbole_new(const char * name);

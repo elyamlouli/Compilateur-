@@ -19,11 +19,10 @@ typedef struct Symbole Symbole;
     char * strval;
     struct {
         struct Symbole * ptr;
-        struct ListGoto * true;
-        struct ListGoto * false;
     } exprval;
     struct {
-        unsigned long quad;
+        size_t quad;
+        struct ListGoto * false;
     } marker;
     int type;
     struct ListSymboles * list_sym;

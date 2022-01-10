@@ -357,14 +357,26 @@ void ListGoto_add(ListGoto * lg, size_t quad_idx) {
 }
 
 ListGoto * ListGoto_concat(ListGoto * lg1,  ListGoto * lg2) {
+    if (lg1->count == 0) {
+        free(lg1);
+        return lg2;
+    }
+
+    if (lg2->count == 0) {
+        free(lg2);
+        return lg1;
+    }
+
     ListGoto * lg = malloc(sizeof(ListGoto));
-    lg->count = 0;
+    lg->count = lg1->count + lg2->count;
     lg->size = INTI_SIZE;
-    while (lg->size < lg1->count + lg2->count) {
+    while (lg->size < lg->count) {
         lg->size *= 2;
     }
     lg->quads_idx = malloc(lg->size * sizeof(size_t));
     CHECKMALLOC(lg->quads_idx);
+    free(lg1);
+    free(lg2);
     return lg;
 }
 
@@ -379,6 +391,7 @@ void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx) {
             q->sym3->offset = quad_idx;
         }
     }
+    free(lg);
 }
 
 
@@ -489,7 +502,6 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
         if (quad->label) {
             fprintf(file, "_QUAD%lu:\n", idx_quad);
         }
-        fprintf(file, "# %lu\n", idx_quad);
         switch (quad->kind)
         {
         case OP_NFC: // new fonction context
