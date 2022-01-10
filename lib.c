@@ -118,7 +118,33 @@ void HashTable_dump(HashTable * hashtable) {
     for (size_t i = 0; i < hashtable->size; i++) {
         HashTableBucket *bucket = hashtable->buckets[i].next;
         while (bucket != NULL) {
-            printf("%s\n", bucket->symbole->name);
+            printf("%s\t", bucket->symbole->name);
+            switch (bucket->symbole->kind) {
+            case K_CONST:
+                printf("CONST");
+                break;
+            case K_FCT:
+                printf("FCT");
+                break;
+            case K_TAB_IDX:
+                printf("TAB_IDX");
+                break;
+            case K_TAB:
+                printf("TAB");
+                break;
+            case K_GLOB:
+                printf("GLOB");
+                break;
+            case K_QUAD:
+                printf("QUAD");
+                break;
+            case K_VAR:
+                printf("VAR");
+                break;
+            default:
+                break;
+            }
+            printf("\n");
             bucket = bucket->next;
         }
     }

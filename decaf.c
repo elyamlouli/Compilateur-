@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         {"tos", no_argument, 0,'t' }
     };
 
-    int dump_symtable = 0;q
+    int dump_symtable = 0;
     int long_index = 0;
     while ((opt = getopt_long_only(argc, argv,"hvto:",long_options, &long_index )) != -1) {
         switch (opt) {
