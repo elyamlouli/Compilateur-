@@ -17,6 +17,7 @@ typedef struct Code Code;
 typedef struct Quad Quad;
 typedef struct Context Context;
 typedef struct FunctionsContexts FunctionsContexts;
+typedef struct ListGoto ListGoto;
 
 
 /* Section fontion utils decaf */
@@ -102,7 +103,7 @@ Symbole * newfunc(SymboleTableRoot * root, const char * name);
 struct Symbole {
     // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
     enum sym_type { T_NONE, T_INT, T_BOOL, T_STRING, T_CHAR, T_VOID } type;
-    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_IDX, K_GLOB, K_FCT } kind;
+    enum sym_kind { K_NONE, K_CONST, K_VAR, K_TAB, K_TAB_IDX, K_GLOB, K_FCT, K_QUAD} kind;
     char * name;
     union {
         // un truc pour les fonctions
@@ -117,6 +118,7 @@ struct Symbole {
     uint32_t offset; // adresse dans le code mips
                     // offset par rapport au SP pour les variables locales
                     // offset par rapport à la déclaration? des variables globales 
+                    // idx_quad
 };
 
 Symbole * Symbole_new(const char * name);
@@ -136,15 +138,17 @@ struct Quad {
     OP_UMOINS,
     OP_CALL, OP_WS, OP_WI, OP_RI, OP_WB,
     OP_PUSH,
+    OP_GOTO, OP_GOTO_IF, OP_GOTO_FOR,
     } kind;
   Symbole * sym1;
   Symbole * sym2;
   Symbole * sym3;
+  int8_t label;
 };
 
 struct Code {
-    unsigned int capacity;
-    unsigned int nextquad;
+    size_t capacity;
+    size_t nextquad;
     Quad * quads;
 };
 
@@ -153,6 +157,25 @@ struct Code * Code_new();
 void Code_free(Code * code);
 
 void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole * s3);
+
+
+
+struct ListGoto {
+    size_t size;
+    size_t count;
+    size_t * quads_idx;
+};
+
+ListGoto * ListGoto_new();
+
+void ListGoto_free(ListGoto * lg);
+
+void ListGoto_add(ListGoto * lg, size_t quad_idx);
+
+ListGoto * ListGoto_concat(ListGoto * lg1,  ListGoto * lg2);
+
+void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx);
+
 
 
 struct ListSymboles {

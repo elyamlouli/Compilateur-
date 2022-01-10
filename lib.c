@@ -14,8 +14,8 @@ typedef struct Symbole Symbole;
 typedef struct Code Code;
 typedef struct Quad Quad;
 
-#define CHECKMALLOC(op) if (op == NULL) { perror(#op); exit(1); }
-
+#define CHECKMALLOC(op) if (op == NULL) { perror(#op); exit(EXIT_FAILURE); }
+#define INTI_SIZE 64LU;
 
 int op_is_int(Symbole * sym1, Symbole * sym2) {
     return (sym1->type == T_INT && sym2->type == T_INT);
@@ -44,7 +44,7 @@ HashTableBucket * HashTableBucket_free(HashTableBucket *bucket) {
 HashTable * HashTable_new() {
     HashTable * hashtable = malloc(sizeof(HashTable));
     CHECKMALLOC(hashtable);
-    hashtable->size = 8;
+    hashtable->size = INTI_SIZE;
     hashtable->count = 0;
     hashtable->buckets = calloc(hashtable->size, sizeof(HashTableBucketRoot*));
     CHECKMALLOC(hashtable->buckets);
@@ -73,7 +73,7 @@ size_t hash_str(const char* s) {
         h = (h * A) ^ (s[0] * B);
         s++;
    }
-   return h; // or return h % C;
+   return h;
 }
 
 
@@ -170,10 +170,14 @@ void SymboleTableRoot_free(SymboleTableRoot * root) {
 
 void SymboleTableRoot_dump(SymboleTableRoot * root) {
     SymboleTable * symtable = root->next;
+    // ajout de poped
+    SymboleTable * poped = root->poped;
     while (symtable != NULL) {
         HashTable_dump(symtable->table);
+        HashTable_dump(poped->table);
         printf("\n");
         symtable = symtable->next;
+        poped = poped->next;
     }
 }
 
@@ -209,7 +213,7 @@ Symbole * newname(SymboleTableRoot * root, const char * name) {
     if (res == -1) { // name déjà présent
         fprintf(stderr, "newname failed : \"%s\" already taken\n", name);
         Symbole_free(symbole);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return symbole;
 }
@@ -241,7 +245,7 @@ Symbole * newtemp (SymboleTableRoot * root) {
     int res = snprintf(name, 25, "-T%lu", root->temporary);
     if (res < 0 || res >= 25) {
         perror("newtemp snprintf");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     (root->temporary)++;
     return newname(root, name);
@@ -256,7 +260,7 @@ Symbole * newfunc(SymboleTableRoot * root, const char * name) {
     Symbole * symbole = HashTable_get(symtable->table, name);
     if (symbole != NULL) {
         fprintf(stderr, "error: function %s aleardy declared\n", name);
-        exit(1);        
+        exit(EXIT_FAILURE);        
     }
 
     symbole = Symbole_new(name);
@@ -312,10 +316,7 @@ void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole 
     if (code->nextquad == code->capacity) {
         code->capacity += 1024;
         code->quads = realloc(code->quads, code->capacity * sizeof(Quad));
-        if(code->quads == NULL) {
-            fprintf(stderr, "Error attempting to grow quad list (actual size is %d)\n",code->nextquad);
-            exit(1);
-        }
+        CHECKMALLOC(code->quads);
     }
 
     Quad * q = &(code->quads[code->nextquad]);
@@ -323,7 +324,61 @@ void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole 
     q->sym1 = s1;
     q->sym2 = s2;
     q->sym3 = s3;
+    q->label = 0;
     (code->nextquad)++;
+}
+
+
+
+ListGoto * ListGoto_new() {
+    ListGoto * lg = malloc(sizeof(ListGoto));
+    CHECKMALLOC(lg);
+    lg->count = 0;
+    lg->size = INTI_SIZE;
+    lg->quads_idx = malloc(lg->size * sizeof(size_t));
+    CHECKMALLOC(lg->quads_idx);
+    return lg;
+}
+
+void ListGoto_free(ListGoto * lg) {
+    free(lg->quads_idx);
+    free(lg);
+}
+
+void ListGoto_add(ListGoto * lg, size_t quad_idx) {
+    if (lg->count == lg->size) {
+        lg->size *= 2;
+        lg->quads_idx = realloc(lg->quads_idx, lg->size * sizeof(size_t));
+        CHECKMALLOC(lg->quads_idx);
+    }
+
+    lg->quads_idx[lg->count] = quad_idx;
+    (lg->count)++;
+}
+
+ListGoto * ListGoto_concat(ListGoto * lg1,  ListGoto * lg2) {
+    ListGoto * lg = malloc(sizeof(ListGoto));
+    lg->count = 0;
+    lg->size = INTI_SIZE;
+    while (lg->size < lg1->count + lg2->count) {
+        lg->size *= 2;
+    }
+    lg->quads_idx = malloc(lg->size * sizeof(size_t));
+    CHECKMALLOC(lg->quads_idx);
+    return lg;
+}
+
+void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx) {
+    for (size_t i = 0; i < lg->count; i++) {
+        Quad * q = &(code->quads[lg->quads_idx[i]]);
+        if (!( q->kind == OP_GOTO || q->kind == OP_GOTO_IF || q->kind == OP_GOTO_FOR )) {
+            fprintf(stderr, "error compilator branching\n");
+            exit(EXIT_FAILURE);
+        } 
+        if (q->sym3->offset == SIZE_MAX) {
+            q->sym3->offset = quad_idx;
+        }
+    }
 }
 
 
@@ -332,7 +387,7 @@ struct ListSymboles * ListSymboles_new() {
     struct ListSymboles * l = malloc(sizeof(struct ListSymboles));
     CHECKMALLOC(l);
     l->count = 0;
-    l->size = 8;
+    l->size = INTI_SIZE;
     l->symboles = malloc(l->size * sizeof(Symbole *));
     CHECKMALLOC(l->symboles);
     return l;
@@ -347,7 +402,7 @@ void ListSymboles_add(struct ListSymboles * l, Symbole * symbole) {
     if (l->count == l->size) {
         l->size *= 2;
         l->symboles= realloc(l->symboles, l->size * sizeof(Symbole *));
-        CHECKMALLOC(l->symboles); // erreur realloc ?
+        CHECKMALLOC(l->symboles);
     }
 
     l->symboles[l->count] = symbole;
@@ -358,7 +413,7 @@ FunctionsContexts * FunctionsContexts_new() {
     FunctionsContexts *ctx = malloc(sizeof(FunctionsContexts));
     CHECKMALLOC(ctx);
     ctx->count = 0;
-    ctx->size = 8;
+    ctx->size = INTI_SIZE;
     ctx->list_ctx = malloc(ctx->size * sizeof(Context));
     CHECKMALLOC(ctx->list_ctx);
     return ctx;
@@ -390,7 +445,7 @@ void FunctionsContexts_pop(FunctionsContexts * ctx) {
         (ctx->count)--;
     } else {
         fprintf(stderr, "error: FunctionsContexts_pop\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -405,11 +460,24 @@ void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
         ListSymboles_add(list_sym, sym);
     } else {
         fprintf(stderr, "error: FunctionsContexts_new_var\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
 void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx) {
+    for (size_t i = 0; i < code->nextquad; i++) {
+        Quad * quad = &(code->quads[i]);
+        if (quad->kind == OP_GOTO || quad->kind == OP_GOTO_IF || quad->kind == OP_GOTO_FOR) {
+            if (quad->sym3->offset != SIZE_MAX) {
+                code->quads[quad->sym3->offset].label = 1;
+            } else {
+                fprintf(stderr, "remaining undefined goto\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+
     size_t gv_offset = 0;
 
     fprintf(file, ".text\n");
@@ -418,7 +486,10 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
 
     for (size_t idx_quad = 0; idx_quad < code->nextquad; idx_quad++) {
         Quad * quad = &(code->quads[idx_quad]);
-        fprintf(file, "# %lu  %d\n", idx_quad, quad->kind);
+        if (quad->label) {
+            fprintf(file, "_QUAD%lu:\n", idx_quad);
+        }
+        fprintf(file, "# %lu\n", idx_quad);
         switch (quad->kind)
         {
         case OP_NFC: // new fonction context
@@ -463,75 +534,98 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             break;
 
         case OP_GE:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tsge $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
 
         case OP_LE:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tsle $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
+            
             break;
 
         case OP_NE:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tsne $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_GT:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tsgt $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_LT:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tslt $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
 
         case OP_EQ:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file,"\tseq $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_ADD:
-            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
-            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
-            fprintf(file, "\taddu $t1, $t2, $t3\n");
-            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file, "\tadd $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_SUB:
-            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
-            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
-            fprintf(file, "\tsubu $t1, $t2, $t3\n");
-            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file, "\tsub $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
+
             break;
         
         case OP_MUL:
-            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
-            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
-            fprintf(file, "\tmulou $t1, $t2, $t3\n");
-            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file, "\tmul $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_DIV:
-            // vérifications sur le signe/div par 0 à faire
-            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
-            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
-            fprintf(file, "\tdivu $t1, $t2, $t3\n");
-            fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);
+            genMIPS_inst_load(file, "$a2", quad->sym3); // doit être != 0
+            fprintf(file, "\tjal _DIV_ZERO\n");
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            fprintf(file, "\tdiv $t1, $t2, $a2\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
+            
             break;
         
         case OP_MOD:
-            /* divu Rsrc1, Rsrc2 Divide (unsigned)
-            Divide the contents of the two registers. divu treats is operands as unsigned values. Leave the
-            quotient in register lo and the remainder in register hi. Note that if an operand is negative,
-            the remainder is unspecified by the MIPS architecture and depends on the conventions of the
-            machine on which SPIM is run. */ 
-            fprintf(file, "\tlw $t2, %u($sp)\n", quad->sym2->offset);
-            fprintf(file, "\tlw $t3, %u($sp)\n", quad->sym3->offset);
-            fprintf(file, "\tdivu $t2, $t3\n");
-            //fprintf(file, "\tsw $t1, %u($sp)\n", quad->sym1->offset);      //a modifier
+            genMIPS_inst_load(file, "$a2", quad->sym3);
+            fprintf(file, "\tjal _DIV_ZERO\n");
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            fprintf(file, "\trem $t1, $t2, $a2\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_INCR:
             genMIPS_inst_load(file, "$t2", quad->sym1);
-            genMIPS_inst_load(file, "$t3", quad->sym2);
-            fprintf(file, "\taddu $t1, $t2, $t3\n");
+            genMIPS_inst_load(file, "$t3", quad->sym2); 
+            fprintf(file, "\tadd $t1, $t2, $t3\n");
             genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
 
         case OP_DECR:
             genMIPS_inst_load(file, "$t2", quad->sym1);
             genMIPS_inst_load(file, "$t3", quad->sym2);
-            fprintf(file, "\tsubu $t1, $t2, $t3\n");
+            fprintf(file, "\tsub $t1, $t2, $t3\n");
             genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
 
@@ -541,15 +635,29 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             break;
         
         case OP_AND:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file, "\tand $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
-        
+
         case OP_OR:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            genMIPS_inst_load(file, "$t3", quad->sym3);
+            fprintf(file, "\tor $t1, $t2, $t3\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_NOT:
+            genMIPS_inst_load(file, "$t1", quad->sym2);
+            fprintf(file, "\tnot $t2, $t1\n");
+            genMIPS_inst_store(file, "$t2", quad->sym1);
             break;
         
         case OP_UMOINS:
+            genMIPS_inst_load(file, "$t2", quad->sym2);
+            fprintf(file, "\tnegu $t1, $t2\n");
+            genMIPS_inst_store(file, "$t1", quad->sym1);
             break;
         
         case OP_CALL:
@@ -577,6 +685,18 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             fprintf(file, "\taddi $sp, $sp, -4\n");
             fprintf(file, "\tsw $t1 ($sp)\n");
             break;
+        case OP_GOTO:
+            fprintf(file, "\tb %_QUAD%lu\n", quad->sym3->offset);
+            break;
+        case OP_GOTO_IF:
+            genMIPS_inst_load(file, "$t4", quad->sym1);
+            fprintf(file, "\tbnrz $t4  _QUAD%lu\n", quad->sym3->offset);
+            break;
+        case OP_GOTO_FOR:
+            genMIPS_inst_load(file, "$t4", quad->sym1);
+            genMIPS_inst_load(file, "$t5", quad->sym2);
+            fprintf(file, "\tble $4, $5, _QUAD%lu", quad->sym3);
+            break;
         default:
             break;
         }
@@ -590,8 +710,19 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
     fprintf(file, "_TAB_ERR:\n");
     fprintf(file, "\tli $v0, 4\n");
     fprintf(file, "\tla $a0, _SYS_MSG1\n");
+    fprintf(file, "\tsyscall\n");
     fprintf(file, "\tb _exit\n");
-    
+
+
+    // Check div by zero
+    fprintf(file, "_DIV_ZERO:");
+    fprintf(file, "\tbeqz $a2, _TAB_ERR\n");
+    fprintf(file, "\tjr $ra\n");
+    fprintf(file, "_DIV_ZERO_ERR:\n");
+    fprintf(file, "\tli $v0, 4\n");
+    fprintf(file, "\tla $a0, _SYS_MSG2\n");
+    fprintf(file, "\tsyscall\n");
+    fprintf(file, "\tb _exit\n"); 
 
 
     // WriteString
@@ -647,7 +778,7 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
     SymboleTable * symtable = root->next;
     if (symtable == NULL) {
         fprintf(stderr, "Error : global variable symtable does not exist. Error in the algorithm\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     while (symtable->next != NULL) {
         symtable = symtable->next;
@@ -689,7 +820,7 @@ void genMIPS_data(FILE * file, SymboleTableRoot * root, size_t gv_offset) {
 void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym) {
     switch (sym->kind) {
     case K_VAR:
-        fprintf(file, "\tlw %s, %lu(%sp)\n", reg, sym->offset);
+        fprintf(file, "\tlw %s, %lu($sp)\n", reg, sym->offset);
         break;
     case K_GLOB:
         fprintf(file, "\tlw %s, _GV+%lu\n", reg, sym->offset);
@@ -707,7 +838,7 @@ void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym) {
             break;
         default:
             fprintf(stderr, "error const type");
-            exit(1);
+            exit(EXIT_FAILURE);
             break;
         }
         break;
@@ -721,7 +852,7 @@ void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym) {
         break;
     default:
         fprintf(stderr, "error genMIPS_inst_load : symbole kind not handled\n");
-        exit(1);
+        exit(EXIT_FAILURE);
         break;
     }
 }
@@ -730,7 +861,7 @@ void genMIPS_inst_load(FILE * file, const char * reg, Symbole * sym) {
 void genMIPS_inst_store(FILE * file, const char * reg, Symbole * sym) {
     switch (sym->kind) {
     case K_VAR:
-        fprintf(file, "\tsw %s, %lu(%sp)\n", reg, sym->offset);
+        fprintf(file, "\tsw %s, %lu($sp)\n", reg, sym->offset);
         break;
     case K_GLOB:
         fprintf(file, "\tsw %s, _GV+%lu\n", reg, sym->offset);
@@ -745,10 +876,12 @@ void genMIPS_inst_store(FILE * file, const char * reg, Symbole * sym) {
         break;
     default:
         fprintf(stderr, "error genMIPS_print_inst_store : symbole kind \"%d\" not handled\n", sym->kind);
-        exit(1);
+        exit(EXIT_FAILURE);
         break;
     }
 }
+
+// void genMIPS_goto(FILE * file, ...)
 
 // OP_GE, OP_LE, OP_NE, OP_GT, OP_LT,
 // OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD,

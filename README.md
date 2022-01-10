@@ -5,7 +5,7 @@ moins prioritaire :
   - meilleur affichage erreur
 
 reste a faire :
-  - operateur
+  - operateur 
   - affectation - redirection tableau + var glob
   - fonction declaration et appel (aussi recursif)
   - branchement / boucle (label + dans quad ?)
@@ -108,3 +108,23 @@ _TAB_ERR:
     b _exit
 
 ```
+
+class AppelUnArgument {
+    void p (int x) {}
+    void main ()
+    {
+        p (1);
+    }
+}
+
+class AssociativiteAddSub {
+
+    void main ()
+    {
+        int r;
+        r = 57 - 99 + 42;
+        WriteInt (r);
+        WriteString ("=0\n");
+    }
+
+}

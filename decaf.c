@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <getopt.h>
 
 #include "decaf.h"
 
@@ -9,14 +10,61 @@ SymboleTableRoot * SYMTABLE;
 Code * CODE;
 FunctionsContexts * FUN_CTX;
 
-int main(void) {
+
+void print_usage() {
+    fprintf(stdout,"\nUsage :\t./decaf [-h] [-version] [-tos] [-o <name>]\n"
+    "\t-h pour help\n"
+    "\t-version afficher les membres du projet\n"
+    "\t-tos pour afficher la table des symboles\n"
+    "\t-o <name> pour écrire le code résultat dans le fichier name\n"
+    "\n");
+}
+
+void print_symtable() {
+    SymboleTableRoot_dump(SYMTABLE);
+}
+
+
+int main(int argc, char **argv) {
+
+    char* file_output = "stdout"; // default case
+
+    // traitement arguments
+    int opt= 0;
+    static struct option long_options[] = {
+        {"version", no_argument, 0,'v' },
+        {"tos", no_argument, 0,'t' }
+    };
+
+    int long_index =0;
+    while ((opt = getopt_long(argc, argv,"hvto:",long_options, &long_index )) != -1) {
+        switch (opt) {
+            case 'h':
+                print_usage();
+                exit(EXIT_SUCCESS);
+            case 'v' : 
+                printf("Michel TCHING, Alexandre SEGOND, Fatima Zahra EL YAMLOULI\n");
+                break;
+            case 't' : 
+                print_symtable();
+                break;
+            case 'o': 
+                file_output = optarg; 
+                break;
+            default: 
+                print_usage(); 
+                exit(EXIT_FAILURE);
+        }
+    }
+    // fin arguments
+
     SYMTABLE = SymboleTableRoot_new();
     CODE = Code_new();
     FUN_CTX = FunctionsContexts_new();
-    FILE * file = fopen("decaf.mips", "w+");
+    FILE * file = fopen(file_output, "w+");
     if (file == NULL) {
         perror("fopen");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     // FILE * file = stdout;
 
@@ -25,10 +73,16 @@ int main(void) {
     fflush(file);
     if (fclose(file) == EOF) {
         perror("fclose");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     FunctionsContexts_free(FUN_CTX);
     Code_free(CODE);
     SymboleTableRoot_free(SYMTABLE);
     return res;
 }
+
+
+
+
+
+

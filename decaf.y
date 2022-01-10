@@ -19,7 +19,12 @@ typedef struct Symbole Symbole;
     char * strval;
     struct {
         struct Symbole * ptr;
+        struct ListGoto * true;
+        struct ListGoto * false;
     } exprval;
+    struct {
+        unsigned long quad;
+    } marker;
     int type;
     struct ListSymboles * list_sym;
 }
@@ -466,14 +471,14 @@ statement
     if ($2 == '=') {
         if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
             fprintf(stderr, "type not INT or BOOL for \'=\' \n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         gencode(CODE, OP_ASSIGN, $1.ptr, $3.ptr, NULL);
 
     }  else {
         if (!op_is_int($1.ptr, $3.ptr)) {
             fprintf(stderr, "type not INT for INCR or DECR \n");
-            exit(1);
+            exit(EXIT_FAILURE);
         };
         if ($2 == DECR) {
             gencode(CODE, OP_DECR, $1.ptr, $3.ptr, NULL);
@@ -546,11 +551,11 @@ method_call
     Symbole * sym_fct = lookup(SYMTABLE, $1);
     if (sym_fct == NULL) {
         fprintf(stderr, "ID \"%s\" is not declared\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (sym_fct->kind != K_FCT) {
         fprintf(stderr, "ID \"%s\" is not a function\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     ListSymboles * l1 = sym_fct->value.args;
@@ -558,13 +563,13 @@ method_call
 
     if (l1->count != l2->count) {
         fprintf(stderr, "error : arguments number not the same\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     for (size_t i = 0; i < l1->count; i++) {
         if (l1->symboles[i]->type != l2->symboles[i]->type) {
             fprintf(stderr, "error : function call not matching type\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -586,12 +591,12 @@ method_call
     (SYMTABLE->temporary)++;
     if (res < 0 || res >= 30) {
         perror("bool_lit snprintf");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     char * str_id = strndup(name, res);
     if (str_id == NULL) {
         perror("strndup");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     Symbole * sym = newconst(SYMTABLE, $3);
@@ -606,7 +611,7 @@ method_call
 {
     if (($3.ptr)->type != T_INT) {
         fprintf(stderr, "WriteInt argument type is not int\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     gencode(CODE, OP_WI, $3.ptr, NULL, NULL);
 }
@@ -616,7 +621,7 @@ method_call
 {
     if (($3.ptr)->type != T_BOOL) {
         fprintf(stderr, "WriteBool argument type is not int\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     gencode(CODE, OP_WB, $3.ptr, NULL, NULL);
 }
@@ -626,7 +631,7 @@ method_call
 {
     if (($3.ptr)->type != T_INT) {
         fprintf(stderr, "WriteInt argument type is not int\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     gencode(CODE, OP_RI, $3.ptr, NULL, NULL);
 }
@@ -677,12 +682,12 @@ location
     Symbole * sym = lookup(SYMTABLE, $1);
     if (sym == NULL) {
         fprintf(stderr, "ID \"%s\" is not declared\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (!(sym->kind == K_VAR || sym->kind == K_TAB_IDX || sym->kind == K_GLOB)) {
         fprintf(stderr, "ID %s wrong kind\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     free($1);
@@ -694,16 +699,16 @@ location
     Symbole * sym = lookup(SYMTABLE, $1);
     if (sym == NULL) {
         fprintf(stderr, "ID \"%s\" is not declared\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (sym->kind != K_TAB) {
         fprintf(stderr, "ID \"%s\" is not an array\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     free($1);
     if ($3.ptr->type != T_INT) {
         fprintf(stderr, "not type int to access array \"%s\"\n", $1);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     Symbole * entry_tab = newtemp(SYMTABLE);
@@ -735,7 +740,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "ADD type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -749,7 +754,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "SUB type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -763,7 +768,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "MUL type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -777,7 +782,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "DIV type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -791,7 +796,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "MOD type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -805,7 +810,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "LT type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -819,7 +824,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "GT type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -833,7 +838,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "LE type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -847,7 +852,7 @@ expr
 {
     if (!(op_is_int($1.ptr, $3.ptr))) {
         fprintf(stderr, "GE type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -861,7 +866,7 @@ expr
 {
     if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
         fprintf(stderr, "EQ type not INT or BOOL\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -875,7 +880,7 @@ expr
 {
     if (!( op_is_int($1.ptr, $3.ptr) || op_is_bool($1.ptr, $3.ptr) )) {
         fprintf(stderr, "NE type not INT or BOOL\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -889,7 +894,7 @@ expr
 {
     if (!(op_is_bool($1.ptr, $3.ptr))) {
         fprintf(stderr, "AND type not BOOL\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -903,7 +908,7 @@ expr
 {
     if (!(op_is_bool($1.ptr, $3.ptr))) {
         fprintf(stderr, "OR type not BOOL\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -917,7 +922,7 @@ expr
 {
     if (!( ($2.ptr)->type == T_BOOL )) {
         fprintf(stderr, "NOT type not BOOL\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -931,7 +936,7 @@ expr
 {
 	if (!( ($2.ptr)->type == T_INT )) {
         fprintf(stderr, "UMOINS type not INT\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
     Symbole * sym = newtemp(SYMTABLE);
     gencode(CODE, OP_LV, sym, NULL, NULL);
@@ -956,7 +961,7 @@ literal
     int res = snprintf(name, 20, "-I%li", $1);
     if (res < 0 || res >= 20) {
         perror("int_lit snprintf");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     Symbole * sym = newconst(SYMTABLE, name);
     sym->type = T_INT;
@@ -971,7 +976,7 @@ literal
     int res = snprintf(name, 20, "-C%li", $1);
     if (res < 0 || res >= 20) {
         perror("char_lit snprintf");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     Symbole * sym = newconst(SYMTABLE, name);
     sym->type = T_CHAR;
@@ -986,7 +991,7 @@ literal
     int res = snprintf(name, 20, "-B%li", $1);
     if (res < 0 || res >= 20) {
         perror("bool_lit snprintf");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     Symbole * sym = newconst(SYMTABLE, name);
     sym->type = T_BOOL;
