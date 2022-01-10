@@ -269,6 +269,12 @@ Symbole * newfunc(SymboleTableRoot * root, const char * name) {
     return symbole;
 }
 
+Symbole * newquadsym(SymboleTableRoot * root) {
+    Symbole * sym = newtemp(root);
+    sym->kind = K_QUAD;
+    sym->value.idx_quad = SIZE_MAX;
+    return sym;
+}
 
 
 Symbole * Symbole_new(const char * name) {
@@ -357,14 +363,32 @@ void ListGoto_add(ListGoto * lg, size_t quad_idx) {
 }
 
 ListGoto * ListGoto_concat(ListGoto * lg1,  ListGoto * lg2) {
+    if (lg1->count == 0) {
+        ListGoto_free(lg1);
+        return lg2;
+    }
+
+    if (lg2->count == 0) {
+        ListGoto_free(lg2);
+        return lg1;
+    }
+
+
     ListGoto * lg = malloc(sizeof(ListGoto));
-    lg->count = 0;
+    lg->count = lg1->count + lg2->count;
     lg->size = INTI_SIZE;
-    while (lg->size < lg1->count + lg2->count) {
+    while (lg->size < lg->count) {
         lg->size *= 2;
     }
     lg->quads_idx = malloc(lg->size * sizeof(size_t));
     CHECKMALLOC(lg->quads_idx);
+
+    memcpy(lg->quads_idx, lg1->quads_idx, lg1->count);
+    memcpy(lg->quads_idx + lg1->count, lg2->quads_idx, lg2->count);
+    
+    ListGoto_free(lg1);
+    ListGoto_free(lg2);
+
     return lg;
 }
 
@@ -379,6 +403,7 @@ void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx) {
             q->sym3->offset = quad_idx;
         }
     }
+    ListGoto_free(lg);
 }
 
 
@@ -465,17 +490,19 @@ void FunctionsContexts_new_var(FunctionsContexts * ctx, Symbole * sym) {
 }
 
 void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx) {
-    for (size_t i = 0; i < code->nextquad; i++) {
-        Quad * quad = &(code->quads[i]);
-        if (quad->kind == OP_GOTO || quad->kind == OP_GOTO_IF || quad->kind == OP_GOTO_FOR) {
-            if (quad->sym3->offset != SIZE_MAX) {
-                code->quads[quad->sym3->offset].label = 1;
-            } else {
-                fprintf(stderr, "remaining undefined goto\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
+    // TODO : uncomment when branch working
+    // for (size_t i = 0; i < code->nextquad; i++) {
+    //     Quad * quad = &(code->quads[i]);
+    //     if (quad->kind == OP_GOTO || quad->kind == OP_GOTO_IF || quad->kind == OP_GOTO_FOR) {
+    //         if (quad->sym3->value.idx_quad != SIZE_MAX && quad->sym3->value.idx_quad < code->nextquad) {
+    //             code->quads[quad->sym3->offset].label = 1;
+    //         } 
+    //         else {
+    //             fprintf(stderr, "remaining undefined goto\n");
+    //             exit(EXIT_FAILURE);
+    //         }
+    //     }
+    // }
 
 
     size_t gv_offset = 0;
@@ -486,10 +513,10 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
 
     for (size_t idx_quad = 0; idx_quad < code->nextquad; idx_quad++) {
         Quad * quad = &(code->quads[idx_quad]);
-        if (quad->label) {
-            fprintf(file, "_QUAD%lu:\n", idx_quad);
-        }
-        fprintf(file, "# %lu\n", idx_quad);
+        // TODO : uncomment when branch wroking        
+        // if (quad->label) {
+        //     fprintf(file, "_QUAD%lu:\n", idx_quad);
+        // }
         switch (quad->kind)
         {
         case OP_NFC: // new fonction context
@@ -685,18 +712,19 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             fprintf(file, "\taddi $sp, $sp, -4\n");
             fprintf(file, "\tsw $t1 ($sp)\n");
             break;
-        case OP_GOTO:
-            fprintf(file, "\tb %_QUAD%lu\n", quad->sym3->offset);
-            break;
-        case OP_GOTO_IF:
-            genMIPS_inst_load(file, "$t4", quad->sym1);
-            fprintf(file, "\tbnrz $t4  _QUAD%lu\n", quad->sym3->offset);
-            break;
-        case OP_GOTO_FOR:
-            genMIPS_inst_load(file, "$t4", quad->sym1);
-            genMIPS_inst_load(file, "$t5", quad->sym2);
-            fprintf(file, "\tble $4, $5, _QUAD%lu", quad->sym3);
-            break;
+        // to uncomment when branch working
+        // case OP_GOTO:
+        //     fprintf(file, "\tb _QUAD%lu\n", quad->sym3->value.idx_quad);
+        //     break;
+        // case OP_GOTO_IF:
+        //     genMIPS_inst_load(file, "$t4", quad->sym1);
+        //     fprintf(file, "\tbnez $t4  _QUAD%lu\n", quad->sym3->value.idx_quad);
+        //     break;
+        // case OP_GOTO_FOR:
+        //     genMIPS_inst_load(file, "$t4", quad->sym1);
+        //     genMIPS_inst_load(file, "$t5", quad->sym2);
+        //     fprintf(file, "\tble $4, $5, _QUAD%lu", quad->sym3->value.idx_quad);
+        //     break;
         default:
             break;
         }

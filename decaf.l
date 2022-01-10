@@ -43,7 +43,6 @@ id {alpha}{alpha_num}*
 "int" { return INT; }
 "return" { return RETURN; }
 "void" { return VOID; }
-
 "main" { return MAIN; }
 
  /* Fin des mots réservés */

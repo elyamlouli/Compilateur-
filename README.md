@@ -17,13 +17,7 @@ encore:
 
 class Test {
     void main () {
-        int a, b, c;
-        a = 1;
-        b = 2;
-        c = a + b;
-    }
-}
-
+        int a, b, c;1
 class Test {
     void main () {
         if (1 < 2) {

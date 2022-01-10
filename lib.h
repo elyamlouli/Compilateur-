@@ -84,6 +84,7 @@ void SymboleTableRoot_free(SymboleTableRoot * root);
 
 void SymboleTableRoot_dump(SymboleTableRoot * root);
 
+
 /* Fonctions de manipulation des symboles */
 
 void pushctx(SymboleTableRoot * root);
@@ -100,6 +101,8 @@ Symbole * newtemp (SymboleTableRoot * root);
 
 Symbole * newfunc(SymboleTableRoot * root, const char * name);
 
+Symbole * newquadsym(SymboleTableRoot * root);
+
 struct Symbole {
     // enum sym_type { CONST_INT, CONST_BOOL, CONST_STRING, CONST_CHAR, VAR_INT, VAR_BOOL, VAR_TAB, NOT_TAB } type;
     enum sym_type { T_NONE, T_INT, T_BOOL, T_STRING, T_CHAR, T_VOID } type;
@@ -114,11 +117,11 @@ struct Symbole {
         int tab_size;       // taille du tableau
         Symbole * tab[2];   // référence au tableau + référence indice
         ListSymboles *args; // arguments 
+        size_t idx_quad;     // quad idx
     } value;        
     uint32_t offset; // adresse dans le code mips
                     // offset par rapport au SP pour les variables locales
                     // offset par rapport à la déclaration? des variables globales 
-                    // idx_quad
 };
 
 Symbole * Symbole_new(const char * name);
@@ -126,7 +129,7 @@ Symbole * Symbole_new(const char * name);
 void Symbole_free(Symbole * symbole);
 
 
-
+/* section pour les Quads */
 
 struct Quad {
   enum quad_kind { 
@@ -160,6 +163,8 @@ void gencode(Code * code, enum quad_kind k, Symbole * s1, Symbole * s2, Symbole 
 
 
 
+/* section pour les Goto */
+
 struct ListGoto {
     size_t size;
     size_t count;
@@ -178,6 +183,8 @@ void ListGoto_complete(Code * code, ListGoto * lg, size_t quad_idx);
 
 
 
+/* section pour les listes de symboles */
+
 struct ListSymboles {
     size_t size;
     size_t count;
@@ -190,11 +197,14 @@ void ListSymboles_free(struct ListSymboles * l);
 
 void ListSymboles_add(struct ListSymboles * l, struct Symbole * symbole);
 
-struct Context {
-    ListSymboles * list_sym;
-    Symbole * ret;
-};
 
+
+/* section pour gérer le contexte */
+
+struct Context {
+    Symbole * ret;
+    ListSymboles * list_sym;
+};
 
 struct FunctionsContexts {
     size_t size;
@@ -212,6 +222,9 @@ void FunctionsContexts_push(struct FunctionsContexts * ctx);
 void FunctionsContexts_pop(struct FunctionsContexts * ctx);
 
 void FunctionsContexts_new_var(struct FunctionsContexts * ctx, Symbole * sym);
+
+
+/* section pour la génération de code MIPS */
 
 void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsContexts * ctx);
 

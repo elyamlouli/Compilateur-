@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
 extern int yylex();
@@ -19,11 +20,10 @@ typedef struct Symbole Symbole;
     char * strval;
     struct {
         struct Symbole * ptr;
-        struct ListGoto * true;
-        struct ListGoto * false;
     } exprval;
     struct {
         unsigned long quad;
+        struct ListGoto * next;
     } marker;
     int type;
     struct ListSymboles * list_sym;
@@ -82,6 +82,14 @@ typedef struct Symbole Symbole;
 %type <list_sym> list_method_call_expr
 %type <list_sym> method_call_expr_opt
 
+%type <marker> block
+%type <marker> block_bis
+%type <marker> marker1
+%type <marker> marker2
+%type <marker> statement_else_opt
+%type <marker> statement
+%type <marker> list_statement
+
 
 %type <type> type
 %type <type> method_type
@@ -100,7 +108,18 @@ typedef struct Symbole Symbole;
 %%
 
 program 
-: CLASS ID '{' field_method '}'
+: CLASS program_name '{' field_method '}'
+;
+
+
+
+
+program_name
+: ID
+| WB
+| WS
+| WI
+| RI
 ;
 
 
@@ -369,15 +388,17 @@ method_arg
 
 
 block 
-: '{'
+: 
+'{'
 {
     pushctx(SYMTABLE);
 }
 block_bis
+'}'
 {
+    $$.next = $3.next;
     popctx(SYMTABLE);
 }
-'}'
 ;
 
 
@@ -385,6 +406,14 @@ block_bis
 
 block_bis
 :list_var_decl list_statement
+{
+    ListGoto_complete(CODE, $2.next, CODE->nextquad);
+
+    ListGoto * lg = ListGoto_new();
+    ListGoto_add(lg, CODE->nextquad);
+    gencode(CODE, OP_GOTO, NULL, NULL, newquadsym(SYMTABLE));
+    $$.next = lg;
+}
 ;
 
 
@@ -458,8 +487,15 @@ type
 
 list_statement 
 : statement list_statement
+{
+    ListGoto_complete(CODE, $1.next, CODE->nextquad);
+    $$.next = $2.next;
+}
 
 |
+{
+    $$.next = ListGoto_new();
+}
 ;
 
 
@@ -486,35 +522,134 @@ statement
             gencode(CODE, OP_INCR, $1.ptr, $3.ptr, NULL);
         }
     }
-    
-    	
+
+    $$.next = ListGoto_new();
 }
 
 | method_call ';'
+{
+    $$.next = ListGoto_new();
+}
 
-| IF '(' expr ')' block statement_else_opt
+| 
+IF '(' expr ')' marker1 block statement_else_opt 
+{
+    if (($3.ptr)->type != T_BOOL) {
+        fprintf(stderr, "if condition type not boolean\n");
+        exit(EXIT_FAILURE);
+    }
 
-| FOR ID '=' expr ',' expr block
+    // branchement
+    Symbole * sym1 = newquadsym(SYMTABLE);
+    sym1->value.idx_quad = $5.quad;
+    gencode(CODE, OP_GOTO_IF, $3.ptr, NULL, sym1);
+    
+    if ($7.next != NULL) {
+        Symbole * sym2 = newquadsym(SYMTABLE);
+        sym2->value.idx_quad = $7.quad; 
+        gencode(CODE, OP_GOTO, NULL, NULL, sym2);
+    }
+
+
+    // complete
+    ListGoto_complete(CODE, $6.next, CODE->nextquad);
+    if ($7.next != NULL) {
+        ListGoto_complete(CODE, $7.next, CODE->nextquad);
+    }
+
+    // goto undefined
+    ListGoto * lg = ListGoto_new();
+    ListGoto_add(lg, CODE->nextquad);
+    gencode(CODE, OP_GOTO, NULL, NULL, newquadsym(SYMTABLE));
+
+    $$.next = lg;
+}
+
+| FOR ID '=' expr ',' expr 
+{
+    pushctx(SYMTABLE);
+
+    if (!($4.ptr->type == T_INT && $6.ptr->type == T_INT)) {
+        fprintf(stderr, "for loop arg not int\n");
+        exit(EXIT_FAILURE);
+    }
+
+    Symbole * sym = newname(SYMTABLE, $2);
+    sym->kind = K_VAR;
+    sym->type =T_INT;
+
+    gencode(CODE, OP_ASSIGN, sym, $4.ptr, NULL);
+
+    free($2);
+}
+marker1 block_bis
+{
+    printf("%p\n", $9.next);
+    ListGoto_complete(CODE, $9.next, CODE->nextquad);
+    Symbole * sym = newquadsym(SYMTABLE);
+    sym->value.idx_quad = $8.quad;
+
+    gencode(CODE, OP_GOTO_FOR, $4.ptr, $6.ptr, sym);
+
+    puts("aaa");
+
+    ListGoto * lg = ListGoto_new();
+    ListGoto_add(lg, CODE->nextquad);
+    gencode(CODE, OP_GOTO, NULL, NULL, newquadsym(SYMTABLE));
+    $$.next = lg;
+    popctx(SYMTABLE);
+}
 
 | RETURN statement_expr_opt ';'
+{
+    $$.next = ListGoto_new();
+}
 
 | BREAK ';'
+{
+    $$.next = ListGoto_new();
+}
 
 | CONTINUE ';'
+{
+    $$.next = ListGoto_new();
+}
 
 | block
+{
+    $$.next = $1.next;
+}
 ;
 
+
+marker1
+: 
+{
+    $$.quad = CODE->nextquad;
+}
+;
 
 
 
 statement_else_opt 
-: ELSE block
+: ELSE marker2 block
+{
+    $$.next = $3.next;
+    $$.quad = $2.quad;
+}
 
 |
+{
+    $$.next = NULL;
+}
 ;
 
-
+marker2 
+: 
+{
+    $$.quad = CODE->nextquad;
+}
+;
 
 
 statement_expr_opt 
@@ -730,6 +865,9 @@ expr
 }
 
 | method_call
+{
+    $$.ptr = $1.ptr;
+}
 
 | literal 
 {
