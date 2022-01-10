@@ -27,7 +27,7 @@ void print_symtable() {
 
 int main(int argc, char **argv) {
 
-    char* file_output = "stdout"; // default case
+    char* file_output = NULL; 
 
     // traitement arguments
     int opt= 0;
@@ -61,7 +61,12 @@ int main(int argc, char **argv) {
     SYMTABLE = SymboleTableRoot_new();
     CODE = Code_new();
     FUN_CTX = FunctionsContexts_new();
-    FILE * file = fopen(file_output, "w+");
+    FILE * file = stdout;
+
+    if (file_output != NULL)
+    {
+        FILE * file = fopen(file_output, "w+");
+    }
     if (file == NULL) {
         perror("fopen");
         exit(EXIT_FAILURE);

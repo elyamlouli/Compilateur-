@@ -100,7 +100,18 @@ typedef struct Symbole Symbole;
 %%
 
 program 
-: CLASS ID '{' field_method '}'
+: CLASS program_name '{' field_method '}'
+;
+
+
+
+
+program_name
+: ID
+| WS
+| WB
+| WI
+| RI
 ;
 
 

@@ -686,7 +686,7 @@ void genMIPS(FILE * file, Code * code, SymboleTableRoot * symtable, FunctionsCon
             fprintf(file, "\tsw $t1 ($sp)\n");
             break;
         case OP_GOTO:
-            fprintf(file, "\tb %_QUAD%lu\n", quad->sym3->offset);
+            fprintf(file, "\tb _QUAD%lu\n", quad->sym3->offset);
             break;
         case OP_GOTO_IF:
             genMIPS_inst_load(file, "$t4", quad->sym1);
