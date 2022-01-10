@@ -152,6 +152,12 @@
 + X0 ? TEST 14.nesting/DoubleIfDansFor
 + X0 ? TEST 14.nesting/ForEnSequence
 + X0 ? TEST 14.nesting/IfEnSequence
++ X0 ? TEST 14.nesting/ForBreakImbriques1
++ X0 ? TEST 14.nesting/ForBreakImbriques2
++ X0 ? TEST 14.nesting/ForBreakImbriques3
++ X0 ? TEST 14.nesting/ForBreakImbriques4
++ X0 ? TEST 14.nesting/TripleBreakContinue
++ X0 ? TEST 14.nesting/QuadrupleBreakContinue
 + ?? ? SECT 15.calls
 + C1 ? TEST 15.calls/AppelProcedure0TypeIncorrect
 + C1 ? TEST 15.calls/AppelProcedure1TypeIncorrect
@@ -188,6 +194,8 @@
 + ?? ? SECT 19.dynamic
 + X1 ? TEST 19.dynamic/AccesHorsBornes1
 + X1 ? TEST 19.dynamic/AccesHorsBornes2
++ X1 ? TEST 19.dynamic/AccesHorsBornesIncrement
++ X1 ? TEST 19.dynamic/AccesHorsBornesDecrement
 + X1 ? TEST 19.dynamic/AppelSansReturn
 + ?? ? SECT 20.big
 + X0 ? TEST 20.big/LeTriangle

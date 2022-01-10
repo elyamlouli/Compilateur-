@@ -1,0 +1,45 @@
+class ForBreakImbriques2 {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        int x;
+        int y;
+        int z;
+        x = 1;
+        y = 5;
+        z = 3;
+        
+        for  i = 1, 10 {
+            if(i < 5){
+                if(i < 8) {
+                    if( y > 5){
+                        break;
+                    }
+                    y = y + z + x;
+                    break;
+                }
+                x = 2 * i;
+                break;
+            }
+            else {
+                if(z > 3) {
+                    if(x > 0) {
+                        if(y > 5) {
+                            break;
+                        }
+                        x = x + y;
+                        break;
+                    }
+                    z = z * 7;
+                    break;
+                }
+            }
+        }
+        
+        WriteInt(x);    WriteString("=1\n");
+        WriteInt(y);    WriteString("=9\n");
+        WriteInt(z);    WriteString("=3\n"); 
+    }
+
+}

@@ -1,0 +1,60 @@
+class QuadrupleBreakContinue {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        int n;
+        int s;
+        int r;
+        int x;
+        n = 10;
+        
+        for i = 1, n
+        {
+            for j = 1, i
+            {
+                if(s > 7) {
+                    break; 
+                }
+        
+                for k = 1, j
+                {
+                    s += 1;
+        
+                    for y = 2, 9 {
+                        x += y;
+                        n += 5;
+                        if (x > 6) {
+                            break;
+                        }
+                        else {
+                            for p = 5, 10 {
+                                if(s % 2 == 0){
+                                    n = n + 3;
+                                    break;
+                                }
+                            }
+                        }
+                        if(y > 10){
+                            r = r + 3;
+                            continue;
+                        }
+                    }
+                }
+                if(s > 3) { 
+                    s += 1; 
+                    continue;
+                }
+                if(s == 8) { 
+                    break;
+                }
+            }
+        }
+        
+        WriteInt (s);   WriteString("=10\n");
+        WriteInt (r);   WriteString("=0\n");
+        WriteInt (n);   WriteString("=55\n");
+        WriteInt (x);   WriteString("=21\n");
+    }
+
+}

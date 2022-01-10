@@ -1,0 +1,61 @@
+class TripleBreakContinue {
+
+    void main ()
+    {
+        // suggéré par Siham Janati et son groupe
+        int x;
+        int y;
+        int z;
+        int counter;
+        y = 5;
+        z = 3;
+        
+        for  i = 1, 10 {
+            x = x + 1;
+            y = y + 1;
+        
+            for j = 1, 10 {
+                if(y > 10) {
+                    if(y > 15) {
+                        y = y + 1;
+                        break;
+                    }
+                    y = y + 5;
+                    break;
+                }
+                if(y < 7 && y > 4) {
+                    y = y + j;
+                    continue;
+                }
+                y = y + 1;
+                
+                for k = 1, 10 {
+                    if(z > 30 && counter == 0 || counter == 2) {
+                        break;
+                    }
+                    z = z + x + y;
+                    if(z == 16) {
+                        z = z + 1;
+                        continue;
+                    }
+                    z = z * 2;
+                }
+        
+                if(z > 30) {
+                    counter += 1;
+                    z = z + j;
+                    break;
+                }
+            }
+            
+            if (x == 7 || x == 9) {
+                continue;
+            }
+        }
+        
+        WriteInt(x);    WriteString("=10\n");
+        WriteInt(y);    WriteString("=30\n");
+        WriteInt(z);    WriteString("=94185\n"); 
+    }
+
+}
